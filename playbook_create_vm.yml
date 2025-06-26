@@ -1,0 +1,8 @@
+- name: Create Ubuntu VM on Proxmox
+  hosts: proxmox
+  become: true
+  roles:
+    - role: create_ubuntu_vm
+      vars:
+        vm_id: 101
+        vm_name: "ubuntu-vm"

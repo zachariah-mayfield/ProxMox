@@ -1,0 +1,96 @@
+---
+- block:
+    - name: Install required packages
+      apt:
+        name: zfsutils-linux
+        state: present
+      become: true
+
+    - name: Find root device (OS disk)
+      command: findmnt -n -o SOURCE /
+      register: root_device_raw
+      changed_when: false
+
+    - name: Normalize root device name
+      set_fact:
+        root_device: "{{ root_device_raw.stdout | regex_replace('p[0-9]+$', '') }}"
+
+    - name: Detect all NVMe drives (disks only, no partitions)
+      shell: "lsblk -ndo NAME,TYPE | awk '$2 == \"disk\" && $1 ~ /^nvme/ {print \"/dev/\" $1}'"
+      register: nvme_devices_raw
+      changed_when: false
+
+    - name: Set initial NVMe devices list
+      set_fact:
+        nvme_devices: "{{ nvme_devices_raw.stdout_lines }}"
+
+    - name: Find NVMe devices that have partitions
+      shell: "lsblk -no NAME,TYPE | grep '^nvme' | grep -v disk | awk '{print substr($1,0,length($1)-1)}' | uniq"
+      register: nvme_partitions_raw
+      changed_when: false
+
+    - name: Set list of NVMe devices with partitions
+      set_fact:
+        nvme_partitioned_devices: >-
+          {{
+            nvme_partitions_raw.stdout_lines
+            | map('regex_replace', 'p?[0-9]+$', '')
+            | unique
+            | map('regex_replace', '^', '/dev/')
+            | list
+          }}
+
+    - name: Filter NVMe devices - exclude those with partitions and root disk
+      set_fact:
+        nvme_devices_filtered: >-
+          {{
+            nvme_devices
+            | difference(nvme_partitioned_devices)
+            | difference([root_device])
+          }}
+
+    - name: Debug - show filtered NVMe drives to be used
+      debug:
+        var: nvme_devices_filtered
+
+    - name: Fail if no NVMe devices available after filtering
+      fail:
+        msg: "No NVMe devices available for ZFS pool creation after filtering."
+      when: nvme_devices_filtered | length == 0
+
+    - name: Destroy existing ZFS pool if it exists
+      command: "zpool destroy {{ zfs_pool_name }}"
+      ignore_errors: true
+      become: true
+
+    - name: Wipe NVMe disks (DANGEROUS - wipes only filtered devices)
+      shell: "wipefs -a {{ item }}"
+      loop: "{{ nvme_devices_filtered }}"
+      become: true
+
+    - name: Create ZFS striped pool with filtered devices
+      command: >
+        zpool create
+        {{ zfs_pool_options | join(' ') }}
+        {{ zfs_pool_name }}
+        {{ nvme_devices_filtered | join(' ') }}
+      become: true
+      register: zfs_create_result
+      changed_when: "'already exists' not in zfs_create_result.stderr"
+
+    - name: Verify ZFS pool status
+      command: zpool status {{ zfs_pool_name }}
+      register: zpool_status
+      become: true
+
+    - name: Check if ZFS pool is already in storage.cfg
+      shell: "grep -q 'zfspool: {{ zfs_pool_name }}' /etc/pve/storage.cfg"
+      register: zfs_pool_registered
+      ignore_errors: true
+      changed_when: false
+
+    - name: Register ZFS pool with Proxmox if not already present
+      command: >
+        pvesm add zfspool {{ zfs_pool_name }} -pool {{ zfs_pool_name }} -content images,rootdir
+      when: zfs_pool_registered.rc != 0
+      become: true

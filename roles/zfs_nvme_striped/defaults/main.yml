@@ -1,0 +1,17 @@
+# nvme_devices:
+#   - /dev/nvme0n1
+#   - /dev/nvme1n1
+#   - /dev/nvme2n1
+#   - /dev/nvme3n1
+
+zfs_pool_name: nvme_pool
+
+zfs_pool_options:
+  - "-o ashift=13"
+  - "-O compression=zstd"
+  - "-O atime=off"
+  - "-O xattr=sa"
+  - "-O normalization=formD"
+  - "-O recordsize=16K"
+  - "-O primarycache=all"
+  - "-O secondarycache=all"

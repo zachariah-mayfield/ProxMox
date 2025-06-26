@@ -1,0 +1,21 @@
+---
+- name: Ensure ISO directory exists
+  ansible.builtin.file:
+    path: "{{ iso_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Check if ISO already exists
+  ansible.builtin.stat:
+    path: "{{ iso_path }}/{{ iso_name }}"
+  register: iso_stat
+
+- name: Download ISO to Proxmox if not already present
+  ansible.builtin.get_url:
+    url: "{{ iso_url }}"
+    dest: "{{ iso_path }}/{{ iso_name }}"
+    mode: '0644'
+    force: no
+  when: not iso_stat.stat.exists

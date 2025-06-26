@@ -1,0 +1,6 @@
+# Set these values to match your Proxmox environment
+iso_url: "https://releases.ubuntu.com/24.04.2/ubuntu-24.04.2-live-server-amd64.iso"
+iso_name: "ubuntu-24.04.1-live-server-amd64.iso"
+iso_storage: "local"
+iso_path: "/var/lib/vz/template/iso"
+
