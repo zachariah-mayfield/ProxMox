@@ -1,0 +1,27 @@
+---
+- name: Remove old Terraform state and cache
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ terraform_state_files }}"
+
+- name: Initialize Terraform
+  command: terraform init -upgrade
+  args:
+    chdir: "{{ terraform_dir }}"
+
+- name: Plan Terraform
+  command: terraform plan
+  args:
+    chdir: "{{ terraform_dir }}"
+
+- name: Apply Terraform (auto-approve)
+  command: terraform apply -auto-approve
+  args:
+    chdir: "{{ terraform_dir }}"
+
+- name: Remove old Terraform state and cache again
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ terraform_state_files }}"
