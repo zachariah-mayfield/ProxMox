@@ -1,6 +1,14 @@
 ---
-terraform_state_files:
-  - "{{ terraform_dir }}/.terraform"
-  - "{{ terraform_dir }}/.terraform.lock.hcl"
-  - "{{ terraform_dir }}/terraform.tfstate"
-  - "{{ terraform_dir }}/terraform.tfstate.backup"
+# Proxmox API connection
+
+# proxmox_api_host: ---> "is the IP address or hostname of your Proxmox server."
+proxmox_api_host: "192.168.1.250"
+
+# proxmox_api_user:  ---> "Proxmox user with API access"
+proxmox_api_user: "root@pam"
+
+# proxmox_api_token_id:  ---> "API token ID (name) for authentication"
+proxmox_api_token_id: "terraform"
+
+# proxmox_api_token_secret:  ---> "API token secret (key) for authentication"
+proxmox_api_token_secret: "b66ba182-6ba8-47d7-985c-19ea59be0933"

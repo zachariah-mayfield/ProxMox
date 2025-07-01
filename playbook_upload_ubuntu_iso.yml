@@ -1,5 +1,0 @@
-- name: Upload Ubuntu ISO if not present
-  hosts: proxmox
-  become: true
-  roles:
-    - upload_ubuntu_iso

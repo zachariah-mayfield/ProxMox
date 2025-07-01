@@ -1,4 +1,0 @@
-- hosts: proxmox
-  become: yes
-  roles:
-    - zfs_nvme_striped

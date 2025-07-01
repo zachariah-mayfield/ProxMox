@@ -1,0 +1,21 @@
+---
+- name: Ensure cloud image directory exists
+  ansible.builtin.file:
+    path: "{{ cloud_image_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Check if cloud image already exists
+  ansible.builtin.stat:
+    path: "{{ cloud_image_path }}/{{ cloud_image_name }}"
+  register: cloud_image_stat
+
+- name: Download Ubuntu Jammy cloud image if not present
+  ansible.builtin.get_url:
+    url: "{{ cloud_image_url }}"
+    dest: "{{ cloud_image_path }}/{{ cloud_image_name }}"
+    mode: '0644'
+    force: no
+  when: not cloud_image_stat.stat.exists

@@ -1,0 +1,7 @@
+---
+- name: Create ZFS NVME Striped Storage Pool
+  hosts: proxmox
+  become: true
+  become_method: sudo
+  roles:
+    - create_zfs_nvme_striped_storage_pool

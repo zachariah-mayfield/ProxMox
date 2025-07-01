@@ -1,0 +1,7 @@
+---
+- name: Download Ubuntu ISO 
+  hosts: proxmox
+  become: true
+  become_method: sudo
+  roles:
+    - download_ubuntu_iso

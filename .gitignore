@@ -1,8 +1,15 @@
 # .gitignore
 
+# I will store all of the SUPER SECRET stuff in these files:
+roles/*/vars/main.yml
+
+# Ignore Ansible inventory files
 inventory.ini
 
+# Ignore ALL Terraform files ---> just for now.
+terraform/
 
+# Ignore these Terraform files
 terraform/.env
 terraform/credentials.auto.tfvars
 terraform/.terraform/

@@ -1,0 +1,16 @@
+---
+- name: Force stop VM "{{ item }}" (ignore if already deleted)
+  command: >
+    qm stop "{{ item }}" --timeout 5
+  ignore_errors: true
+  failed_when: false
+  loop: "{{ vm_ids }}"
+  delegate_to: "{{ proxmox_api_host | default('localhost') }}"
+
+- name: Delete VM "{{ item }}" (ignore if already deleted)
+  command: >
+    qm destroy "{{ item }}" --purge 1
+  ignore_errors: true
+  failed_when: false
+  loop: "{{ vm_ids }}"
+  delegate_to: "{{ proxmox_api_host | default('localhost') }}"

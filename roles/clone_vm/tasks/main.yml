@@ -1,0 +1,135 @@
+---
+# Ensures that the snippets directory exists on the Proxmox server where cloud-init user-data will be copied.
+# The directory is used to store cloud-init configuration files for the cloned VM.
+# The directory is created with the appropriate permissions to allow Proxmox to access it.
+- name: Ensure snippets directory exists on Proxmox
+  ansible.builtin.file:
+    path: /var/lib/vz/snippets
+    state: directory
+    mode: '0755'
+  delegate_to: "{{ proxmox_api_host }}"
+
+# Renders the cloud-init user-data configuration file from a Jinja2 template.
+# The template is processed with the variables defined in the playbook, such as `vm_name`, `vm_template_id`, and `storage_name`.
+# The rendered file is then copied to the Proxmox snippets directory with the specified permissions.
+# This task is essential for customizing the cloud-init configuration for the cloned VM.
+# The `src` parameter specifies the Jinja2 template file,
+# and the `dest` parameter specifies the destination path on the Proxmox server.
+# The `mode` parameter sets the file permissions to allow read and write access for the owner
+# and read access for the group and others.
+# The `delegate_to` parameter ensures that the task is executed on the Proxmox API host, which is specified by the `proxmox_api_host` variable.
+# This is necessary because the cloud-init configuration needs to be applied directly on the Proxmox server where the VM is being cloned.
+# The rendered file will be used by Proxmox to configure the cloned VM with the specified cloud-init settings.
+# The `user-data.j2` template should contain the necessary cloud-init configuration for the VM, such as network settings, SSH keys, and other initialization parameters.
+- name: Render and copy cloud-init user-data to Proxmox
+  ansible.builtin.template:
+    src: "user-data.j2"
+    dest: "/var/lib/vz/snippets/user-data-{{ vm_name }}.yml"
+    mode: '0644'
+  delegate_to: "{{ proxmox_api_host }}"
+
+# The tasks in this file will clone a VM template into a new VM with the specified ID and name.
+- name: Clone VM {{ vm_template_id }} into new VM {{ new_vm_id }}
+  ansible.builtin.command:
+    cmd: >
+      qm clone {{ vm_template_id }} {{ new_vm_id }} 
+      --name {{ vm_name }} 
+      --full true 
+      --storage {{ storage_name }}
+  delegate_to: "{{ proxmox_api_host }}"
+  register: clone_result
+
+# Set the cloud-init --cicustom config on the cloned VM
+# Tell Proxmox to use your custom user-data.yml file
+- name: Set cloud-init to use custom user-data snippet
+  ansible.builtin.command:
+    cmd: >
+      qm set {{ new_vm_id }} --cicustom "user=local:snippets/user-data-{{ vm_name }}.yml"
+  delegate_to: "{{ proxmox_api_host }}"
+
+# This attaches the cloud-init ISO to the cloned VM.
+# It uses the Proxmox command `qm set` to attach the ISO as a CD-ROM drive.
+# The ISO is stored in the specified storage pool and named according to the VM ID.
+# The `ide2` parameter specifies that the ISO will be attached to the second IDE controller
+# of the VM, and `media=cdrom` indicates that it will be used as a CD-ROM drive.
+# This is necessary for cloud-init to function properly, as it allows the VM to access the cloud-init configuration during boot.
+- name: Attach cloud-init ISO to VM {{ new_vm_id }} as CD-ROM
+  ansible.builtin.command:
+    cmd: qm set {{ new_vm_id }} --ide2 {{ storage_name }}:vm-{{ new_vm_id }}-cloudinit,media=cdrom
+  delegate_to: "{{ proxmox_api_host }}"
+
+# Set boot order (boot from scsi0)
+# This command sets the boot order for the cloned VM to prioritize the SCSI disk (scsi0).
+# The `qm set` command is used to configure the VM settings, and the `--boot order=scsi0` option specifies that the VM should boot from the SCSI disk first.
+# This is important for ensuring that the VM boots from the correct disk, especially if it has multiple disks or if the cloud-init ISO is attached as a CD-ROM.
+# The command is executed on the Proxmox API host, which is specified by the `delegate_to` parameter.
+- name: Set boot disk order
+  ansible.builtin.command:
+    cmd: qm set {{ new_vm_id }} --boot order=scsi0
+  delegate_to: "{{ proxmox_api_host }}"
+
+# Start the VM
+- name: Start cloned VM
+  ansible.builtin.command:
+    cmd: qm start {{ new_vm_id }}
+  delegate_to: "{{ proxmox_api_host }}"
+
+# Wait for the QEMU guest agent to start and respond
+# This task uses the `qm guest cmd` command to check if the QEMU guest agent
+# is running and responding on the cloned VM. It attempts to execute the `network-get-interfaces`
+- name: Wait for QEMU guest agent to start and respond
+  ansible.builtin.command:
+    cmd: qm guest cmd {{ new_vm_id }} network-get-interfaces
+  register: guest_agent_check
+  delegate_to: "{{ proxmox_api_host }}"
+  retries: 20          # number of attempts
+  delay: 6             # seconds between attempts
+  until: guest_agent_check.rc == 0
+  changed_when: false
+  failed_when: false
+
+# get the IP address of the VM via the QEMU guest agent
+# This task retrieves the network interfaces of the VM using the QEMU guest agent.
+# It uses the `qm guest cmd` command to execute the `network-get-interfaces`
+# command on the specified VM ID {{ new_vm_id }}.
+# The output is registered in the `guest_network_info` variable.
+# The `delegate_to` parameter ensures that the command is executed on the Proxmox API host.
+- name: Get IP address of VM {{ new_vm_id }} via QEMU guest agent
+  ansible.builtin.command:
+    cmd: qm guest cmd {{ new_vm_id }} network-get-interfaces
+  register: guest_network_info
+  failed_when: guest_network_info.rc != 0
+  changed_when: false
+  delegate_to: "{{ proxmox_api_host }}"
+
+- name: Debug raw guest agent output
+  debug:
+    var: guest_network_info.stdout | from_json
+
+# Extract the primary IPv4 address with prefix 24 from the guest network info
+# This task uses the `json_query` filter to extract the primary IPv4 address with a
+# prefix of 24 from the `guest_network_info` variable, which contains the output
+# from the QEMU guest agent command.
+# The `json_query` filter is used to query the JSON structure and find the first IPv4 address
+# that matches the specified criteria (IPv4 type and prefix 24).
+# The result is flattened and the first matching address is stored in the `vm_primary_ip`
+# variable. If no matching address is found, a default message is set.
+# The `flatten` filter is used to ensure that the result is a flat list, and
+# `first` is used to get the first element from that list.
+# If no address is found, it defaults to 'No IPv4 with prefix 24 found'.
+# This is useful for ensuring that the VM has a valid primary IP address
+# that can be used for further operations, such as SSH access or network configuration.
+- name: Extract IPv4 address with prefix 24
+  set_fact:
+    vm_primary_ip: >-
+      {{
+        (guest_network_info.stdout | from_json)
+        | json_query('[]."ip-addresses"[? "ip-address-type" == `ipv4` && prefix == `24`]."ip-address"')
+        | flatten
+        | first
+        | default('No IPv4 with prefix 24 found')
+      }}
+
+- name: Debug primary IPv4 address
+  debug:
+    msg: "Primary IPv4 address with prefix 24: {{ vm_primary_ip }}" 

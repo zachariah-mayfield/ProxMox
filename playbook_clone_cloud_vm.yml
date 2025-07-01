@@ -1,0 +1,8 @@
+---
+- name: Clone cloud vm from - clone_vm role
+  hosts: proxmox
+  become: true
+  become_method: sudo
+  gather_facts: false
+  roles:
+    - clone_vm
