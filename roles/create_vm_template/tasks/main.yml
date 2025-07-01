@@ -12,8 +12,8 @@
       --scsihw virtio-scsi-pci
       --serial0 socket
       --vga serial0
-      --ciuser "ubuntu"
-      --cipassword "ubuntu"
+      --ciuser {{ cloud_init_user }}
+      --cipassword {{ cloud_init_password }}
       --ipconfig0 ip=dhcp
       --sshkey /root/.ssh/id_ed25519.pub
       --agent enabled=1
