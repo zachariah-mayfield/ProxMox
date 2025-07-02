@@ -23,7 +23,7 @@ cloudinit_autologin: true
 
 # This is the VM template ID to clone from.
 # vm_template_id:  ---> "ID of the Proxmox VM template to clone"
-vm_template_id: 7000
+vm_template_id: 7777
 
 # This is the ID for the new VM that will be created from the clone.
 # new_vm_id:  ---> "ID for the new cloned VM"

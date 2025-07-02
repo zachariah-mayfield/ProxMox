@@ -7,7 +7,11 @@ roles/*/vars/main.yml
 inventory.ini
 
 # Ignore ALL Terraform files ---> just for now.
-terraform/*
+# terraform/*
+
+terraform/templates/user-data.tpl
+terraform/terraform.tfvars
+
 
 # Ignore these Terraform files
 terraform/.env
