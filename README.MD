@@ -179,7 +179,7 @@ apt update
 sudo apt install wsdd
 ```
 
-# How to check logs for Cloud-Init and make sure it installed some of the applications on the new VM:
+# Commands for how to check logs for Cloud-Init and make sure it installed some of the applications on the new VM:
 ```bash
 # bash
 
@@ -214,6 +214,10 @@ sudo tail -n 100 /var/log/cloud-init.log
 sudo systemctl status qemu-guest-agent
 
 systemctl status qemu-guest-agent docker
-
-
 ```
+
+# Terraform Proxmox provider Documentation: 
+- (Terraform Provider - BPG/Proxmox - Resource virtual_environment_file)[https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_file]
+- (Terraform Provider - BPG/Proxmox - Resource virtual_environment_vm)[https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_vm]
+- (Terraform Provider - Telmate/Proxmox - Resource cloud_init)[https://registry.terraform.io/providers/Telmate/proxmox/latest/docs/guides/cloud_init]
+- (Terraform Provider - Telmate/Proxmox - Resource vm_qemu)[https://registry.terraform.io/providers/Telmate/proxmox/latest/docs/resources/vm_qemu]
