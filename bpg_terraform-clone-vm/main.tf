@@ -90,6 +90,7 @@ resource "proxmox_virtual_environment_vm" "clone_vm" {
   network_device {
     model  = "virtio"
     bridge = "vmbr0"
+    mac_address = var.mac_address # If null, mac_address is omitted
   }
 
   boot_order = ["scsi0", "ide2"]
@@ -110,19 +111,20 @@ resource "proxmox_virtual_environment_vm" "clone_vm" {
   initialization {
     ip_config {
       ipv4 {
-        address = "dhcp"
+        address = var.ip_address
+        gateway = var.ip_address == "dhcp" ? null : var.gateway
       }
     }
 
     datastore_id      = "local" # ← STAYS "local" to match snippet location
     user_data_file_id = proxmox_virtual_environment_file.user_data.id
-  } 
-    # user_account {
-    #   username = "ubuntu"
-    #   password = "ubuntu"
-    #   keys     = [trimspace(file("~/.ssh/id_ed25519.pub"))]
-    # }
 
+    user_account {
+      username = var.cloud_init_user
+      password = bcrypt(var.cloud_init_password)
+      keys = [trimspace(file(var.ssh_key_path))] # This converts your single key string into a list with one item.
+    }
+  } 
 }
 
 output "vm_name" {
@@ -133,6 +135,10 @@ output "vm_id" {
   value = proxmox_virtual_environment_vm.clone_vm.vm_id
 }
 
+output "vm_mac_address" {
+  value = proxmox_virtual_environment_vm.clone_vm.network_device[0].mac_address
+}
+
 output "vm_ip" {
-  value = proxmox_virtual_environment_vm.clone_vm.ipv4_addresses
+  value = proxmox_virtual_environment_vm.clone_vm.ipv4_addresses[1]
 }

@@ -42,6 +42,30 @@ variable "target_vm_name" {
   default     = "automation-7777"
 }
 
+variable "mac_address" {
+  description =  <<EOT
+MAC address for the cloned VM. If null, mac_address is omitted (e.g. 'AA:BB:CC:DD:77:77'). 
+If you need a unique MAC address, change this to a specific value.
+EOT
+  type        = string
+  default     = null # Change to a unique MAC address if needed
+}
+
+variable "ip_address" {
+  description = <<EOT
+IP address for the cloned VM. Use 'dhcp' for DHCP or specify an IP address in CIDR notation 
+(e.g. '192.168.1.240/24'). Or use 'dhcp'
+EOT
+  type    = string
+  default = "dhcp" # Change to "dhcp" for DHCP
+}
+
+variable "gateway" {
+  description = "Gateway IP address for the cloned VM. Ommit if using 'dhcp'."
+  type    = string
+  default = "dhcp" # Ommit if using "dhcp"
+}
+
 variable "cloud_init_root" {
   description = "cloud-init root"
   type        = string
