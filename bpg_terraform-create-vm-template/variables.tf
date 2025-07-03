@@ -17,7 +17,7 @@ variable "proxmox_api_token" {
 variable "vm_template_id" {
   description = "VM ID for the template VM"
   type        = number
-  default     = 7777
+  default     = 7000
 }
 
 variable "vm_template_name" {
