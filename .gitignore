@@ -6,12 +6,12 @@ roles/*/vars/main.yml
 # Ignore Ansible inventory files
 inventory.ini
 
-# Ignore ALL Terraform files ---> just for now.
-# terraform/*
+# Ignore ALL sensitive Terraform Telmate provider clone vm files:
+telmate_terraform-clone-vm/cloudinit/*
+telmate_terraform-clone-vm/terraform.tfvars
 
-terraform/templates/user-data.tpl
-terraform/terraform.tfvars
-
+# Ignore ALL sensitive Terraform BPG provider create vm template files:
+bpg_terraform-create-vm-template/terraform.tfvars
 
 # Ignore these Terraform files
 terraform/.env
