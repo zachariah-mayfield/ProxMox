@@ -5,6 +5,17 @@ set -e
 
 echo "🧹 Cleaning up previous Terraform state and cache..."
 
+TARGET_DIR="$HOME/GitHub/Main/ProxMox/bpg_terraform-clone-vm/" 
+
+# Change to the target directory
+cd "$TARGET_DIR" || {
+    echo "Failed to change directory to $TARGET_DIR"
+    exit 1
+}
+
+# Show current directory
+echo "Now in $(pwd)"
+
 # Remove existing Terraform state and cache files
 # terraform destroy -auto-approve
 rm -rf .terraform/ .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
