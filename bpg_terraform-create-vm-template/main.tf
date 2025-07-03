@@ -32,7 +32,7 @@ provider "proxmox" {
 # }
 
 resource "proxmox_virtual_environment_vm" "vm_template" {
-  name        = "zm-ubuntu-template"
+  name        = var.vm_template_name
   node_name   = var.proxmox_node_name
   vm_id       = var.vm_template_id
   template    = true    # replaces this block of code ---> resource "null_resource" "convert_to_template" {***}

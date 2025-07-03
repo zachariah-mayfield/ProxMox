@@ -28,19 +28,19 @@ variable "proxmox_api_token" {
 variable "vm_template_id" {
   description = "VM ID for the template"
   type        = number
-  default     = 7777
+  default     = 7000
 }
 
 variable "target_vm_id" {
   description = "target VM ID for the cloned VM"
   type        = number
-  default     = 7111
+  default     = 7777
 }
 
 variable "target_vm_name" {
   description = "Name for the cloned VM"
   type        = string
-  default     = "clone-vm-7111"
+  default     = "automation-7777"
 }
 
 variable "ssh_key_path" {
