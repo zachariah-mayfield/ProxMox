@@ -4,6 +4,7 @@
 set -e
 
 echo "🧹 Cleaning up previous Terraform state and cache..."
+# terraform destroy -auto-approve
 rm -rf .terraform/ .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
 
 echo "🔄 Running 'terraform init -upgrade'..."

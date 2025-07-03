@@ -4,6 +4,8 @@
 set -e
 
 echo "🧹 Cleaning up previous Terraform state and cache..."
+
+# Remove existing Terraform state and cache files
 # terraform destroy -auto-approve
 rm -rf .terraform/ .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
 

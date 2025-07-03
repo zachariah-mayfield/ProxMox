@@ -8,15 +8,17 @@ inventory.ini
 
 # Ignore ALL sensitive Terraform Telmate provider clone vm files:
 telmate_terraform-clone-vm/cloudinit/*
-telmate_terraform-clone-vm/terraform.tfvars
 
 # Ignore ALL sensitive Terraform BPG provider create vm template files:
-bpg_terraform-create-vm-template/terraform.tfvars
+# bpg_terraform-create-vm-template/terraform.tfvars
+
+# Ignore ALL sensitive Terraform BPG provider clone vm files:
+bpg_terraform-clone-vm/cloudinit/*
+*.tfvars
 
 # Ignore these Terraform files
-terraform/.env
-terraform/credentials.auto.tfvars
-terraform/.terraform/
-terraform/.terraform.lock.hcl
-terraform/*.tfstate
-terraform/*.tfstate.*
+*.env
+*.terraform/
+*.terraform.lock.hcl
+*.tfstate
+*.tfstate.*

@@ -179,3 +179,41 @@ apt update
 sudo apt install wsdd
 ```
 
+# How to check logs for Cloud-Init and make sure it installed some of the applications on the new VM:
+```bash
+# bash
+
+sudo cloud-init status
+
+sudo cloud-init status --long
+
+sudo cloud-init schema --system
+
+sudo cloud-init query
+
+sudo cloud-init modules --mode=config
+
+sudo cloud-init modules --mode=final
+
+sudo systemctl restart cloud-init
+
+sudo journalctl -fu cloud-init
+
+qm cloudinit dump <vm_id> user
+
+qm config <vm_id> | grep ide2
+
+qm config <vm_id> | grep cicustom
+
+grep -i "error" /var/log/cloud-init.log
+
+grep -i "user-data" /var/log/cloud-init.log
+
+sudo tail -n 100 /var/log/cloud-init.log
+
+sudo systemctl status qemu-guest-agent
+
+systemctl status qemu-guest-agent docker
+
+
+```
