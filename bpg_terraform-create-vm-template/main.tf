@@ -12,7 +12,7 @@ terraform {
 }
 
 provider "proxmox" {
-  endpoint       = "https://${var.proxmox_server_ip}:8006/api2/json"
+  endpoint       = "https://${var.proxmox_server_ip}:8006/api2/json" # --> may need to remove /api2/json
   api_token      = var.proxmox_api_token
   insecure       = true
   ssh {
