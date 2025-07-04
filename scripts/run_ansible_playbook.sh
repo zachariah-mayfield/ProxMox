@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to the directory
-TARGET_DIR="$HOME/GitHub/Main/ProxMox/" 
+TARGET_DIR="$HOME/GitHub/Main/ProxMox/Ansible/"
 
 # Change to the target directory
 cd "$TARGET_DIR" || {
