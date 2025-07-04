@@ -143,7 +143,7 @@ variable vm_configs {
         }
         "vm-8888" = {
             target_vm_id        = 8888
-            target_vm_name      = "automation-8888"
+            target_vm_name      = "worker-8888"
             memory       = 8192
             cpu_sockets  = 1
             cpu_cores    = 4
@@ -154,7 +154,7 @@ variable vm_configs {
         }
         "vm-9999" = {
             target_vm_id        = 9999
-            target_vm_name      = "automation-9999"
+            target_vm_name      = "worker-9999"
             memory       = 8192
             cpu_sockets  = 1
             cpu_cores    = 4
