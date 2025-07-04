@@ -1,0 +1,17 @@
+# Older image: hashicorp/terraform:1.12
+
+# 💡 Notes:
+# ${TERRAFORM_WORKDIR} = (~/GitHub/Main/ProxMox/Terraform/${TERRAFORM_WORKDIR})
+# working_dir is set to /workspace, but the script in (~/GitHub/Main/ProxMox/Scripts) 
+# uses -chdir=/workspace/<project> to target specific subfolders in (~/GitHub/Main/ProxMox/Terraform/<project>).
+
+services:
+  terraform:
+    image: hashicorp/terraform:1.5.7
+    container_name: terraform
+    volumes:
+      - ~/.ssh:/root/.ssh:ro           # mount your SSH keys into the container to make your Mac's ~/.ssh folder available inside the container at /root/.ssh
+      - $HOME/GitHub/Main/ProxMox/Terraform:/workspace            
+    working_dir: /workspace                 
+    stdin_open: true                   # stdin_open: true ---> Allows input (e.g., typing) 
+    tty: true                          # tty: true ---> Formats output like a terminal

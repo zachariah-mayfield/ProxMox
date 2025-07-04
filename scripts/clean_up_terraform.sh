@@ -6,7 +6,7 @@ ROOT_DIR="$HOME/GitHub/Main/ProxMox/Terraform"
 echo "🧹 Cleaning Terraform artifacts in: $ROOT_DIR"
 
 # Find ALL Terraform artifacts
-# find /Users/zachariah-mayfield/GitHub/Main/ProxMox/Terraform/ \
+# find "$ROOT_DIR" \
 #     \( -name ".terraform" \
 #     -o -name ".terraform.lock.hcl" \
 #     -o -name "terraform.tfstate" \

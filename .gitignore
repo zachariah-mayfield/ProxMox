@@ -1,25 +1,19 @@
 # .gitignore
 
+# Environment specific file(s)
+*.env
+
 # Ignore Ansible Sensitive files:
 Ansible/roles/*/vars/main.yml
 inventory.ini
 
 # Ignore Terraform Sensitive files:
 Terraform/*/terraform.tfvars
-*.tfvars
-
-# Ignore ALL sensitive Terraform Telmate provider clone vm files:
 Terraform/*/cloudinit/*
-
-# Ignore ALL sensitive Terraform BPG provider create vm template files:
-# bpg_terraform-create-vm-template/terraform.tfvars
-
-# Ignore ALL sensitive Terraform BPG provider clone vm files:
-#bpg_terraform-clone-vm/cloudinit/*
 *.tfvars
 
-# Ignore these Terraform files
-*.env
+# Ignore these Terraform Artifact folders and files: 
+# (Terraform plugin cache & state) & (Terraform lock file) & (Terraform local state file) & (Terraform backup of last state file)
 *.terraform/
 *.terraform.lock.hcl
 *.tfstate
