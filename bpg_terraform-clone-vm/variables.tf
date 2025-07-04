@@ -98,3 +98,91 @@ variable "ssh_key_path" {
   description = "ssh key path"
   type        = string
 }
+
+variable "vm_mac_addresses" {
+  description = "Optional MAC addresses per VM"
+  type        = map(string)
+  default     = {}
+}
+
+variable "vm_ip_addresses" {
+  description = "Optional static IPs per VM (use 'dhcp' for dynamic)"
+  type        = map(string)
+  default     = {}
+}
+
+variable "vm_gateways" {
+  description = "Optional gateways per VM (omit if using DHCP)"
+  type        = map(string)
+  default     = {}
+}
+
+variable vm_configs {
+    type = map(object({
+        target_vm_id        = number
+        target_vm_name      = string
+        memory       = number
+        cpu_sockets  = number
+        cpu_cores    = number
+        disk_size    = number
+        mac_address  = optional(string, null) # Optional MAC address, default is null
+        ip_address   = optional(string, "dhcp") # Optional IP address, default is "dhcp"
+        gateway      = optional(string, "dhcp") # Optional gateway, default
+    }))
+    default = {
+        "vm-7777" = {
+            target_vm_id        = 7777
+            target_vm_name      = "automation-7777"
+            memory       = 16384 # 16GB memory
+            cpu_sockets  = 1
+            cpu_cores    = 8
+            disk_size    = 50
+            #mac_address  = "AA:BB:CC:DD:77:77" # Optional MAC address, change if needed
+            #ip_address   = "192.168.1.240/24"
+            #gateway      = "192.168.1.254"
+        }
+        "vm-8888" = {
+            target_vm_id        = 8888
+            target_vm_name      = "automation-8888"
+            memory       = 8192
+            cpu_sockets  = 1
+            cpu_cores    = 4
+            disk_size    = 50
+            #mac_address  = "AA:BB:CC:DD:88:88" # Optional MAC address, change if needed
+            #ip_address   = "dhcp" # Use "dhcp" for DHCP
+            #gateway      = "dhcp" # Ommit if using "dhcp"
+        }
+        "vm-9999" = {
+            target_vm_id        = 9999
+            target_vm_name      = "automation-9999"
+            memory       = 8192
+            cpu_sockets  = 1
+            cpu_cores    = 4
+            disk_size    = 50
+            #mac_address  = null # Optional MAC address, change if needed
+            #ip_address   = "dhcp" # Use "dhcp" for DHCP
+            #gateway      = "dhcp" # Ommit if using "dhcp"
+        }
+    }
+} 
+
+
+# TFVARS EXAMPLE:
+
+# vm_mac_addresses = {
+#   "vm-7777" = "AA:BB:CC:DD:77:77"
+#   "vm-8888" = "AA:BB:CC:DD:88:88"
+# # "vm-9999" = null  # Optional, can be omitted or set to null
+# }
+
+# vm_ip_addresses = {
+#   "vm-7777" = "192.168.1.240/24"
+#   "vm-8888" = "dhcp"
+# # "vm-9999" = "dhcp"  # Optional, can be omitted or set to "dhcp"
+# }
+
+# vm_gateways = {
+#   "vm-7777" = "192.168.1.254"
+#   # "vm-8888" gateway omitted or set to "dhcp"
+#   # "vm-9999" gateway omitted or set to "dhcp"
+# }
