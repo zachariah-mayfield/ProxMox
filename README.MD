@@ -5,7 +5,7 @@
 - Power Supply: Corsair AX1600i 1600W Digital ATX Power Supply
 - CPU Cooler: CORSAIR iCUE H170i ELITE CAPELLIX Liquid CPU Cooler - 33 Dynamic RGB LEDs - 140mm Fans - 420mm Radiator - COMMANDER CORE Smart Lighting Controller
 - Motherboard: MSI MEG Z590 GODLIKE Gaming Motherboard (E-ATX, 11th/10th Gen Intel Core, LGA 1200 Socket, DDR4, PCIe 4, SLI/CFX, M.2 Slots, Thunderbolt, Wi-Fi 6E, Mystic Light RGB)
-- Hard Drive(s): (4) Seagate FireCuda 530 2TB M.2 NVMe PCIE Internal SSD 
+- Hard Drive(s): (4) Seagate FireCuda 530 2TB M.2 NVMe PCIE Internal SSD & (1) Crucial M550 2.5" 512GB SATA 6Gbps MLC Internal Solid State Drive (SSD) CT512M550SSD1
 - CPU: Intel Core i9-11900K 11th Gen Rocket Lake 8 Core 3.5 GHz LGA 1200 125W CPU
 - Memory: Corsair Dominator Platinum RGB 128GB (4x32GB) DDR4 3200 (PC4-25600) C16 1.35V Desktop Memory
 - Video Card: MSI Gaming GeForce RTX 3060 12GB 15 Gbps GDRR6 192-Bit Gaming X Trio 
