@@ -1,4 +1,21 @@
-# 📄 Proxmox Initial Setup on a Laptop
+# ProxMox Server Build
+
+## Hardware Specifications:
+- Case: CORSAIR 7000D AIRFLOW Full-Tower ATX PC Case, Black
+- Power Supply: Corsair AX1600i 1600W Digital ATX Power Supply
+- CPU Cooler: CORSAIR iCUE H170i ELITE CAPELLIX Liquid CPU Cooler - 33 Dynamic RGB LEDs - 140mm Fans - 420mm Radiator - COMMANDER CORE Smart Lighting Controller
+- Motherboard: MSI MEG Z590 GODLIKE Gaming Motherboard (E-ATX, 11th/10th Gen Intel Core, LGA 1200 Socket, DDR4, PCIe 4, SLI/CFX, M.2 Slots, Thunderbolt, Wi-Fi 6E, Mystic Light RGB)
+- Hard Drive(s): (4) Seagate FireCuda 530 2TB M.2 NVMe PCIE Internal SSD 
+- CPU: Intel Core i9-11900K 11th Gen Rocket Lake 8 Core 3.5 GHz LGA 1200 125W CPU
+- Memory: Corsair Dominator Platinum RGB 128GB (4x32GB) DDR4 3200 (PC4-25600) C16 1.35V Desktop Memory
+- Video Card: MSI Gaming GeForce RTX 3060 12GB 15 Gbps GDRR6 192-Bit Gaming X Trio 
+- Monitors: (2) SAMSUNG 49-inch Odyssey G9 Gaming Monitor | QHD, 240hz, 1000R Curved, QLED, NVIDIA G-SYNC & FreeSync | LC49G95TSSNXZA Model
+- Keyboard: Razer BlackWidow V3 Pro Mechanical Wireless Gaming Keyboard
+- Mmouse: Razer Basilisk Ultimate Hyperspeed Wireless Gaming Mouse w/ Charging Dock
+- Gaming Controler: Xbox Wireless Controller – Electric Volt for Xbox Series X and charging Dock 
+- (2) Ergotron – HX Single Ultrawide Monitor Arm, VESA Wall Mount – for Monitors Up to 49 Inches, 20 to 42 lbs, Less Than 6 Inch Display Depth 
+
+# 📄 How to set up Proxmox on a or Server or Desktop - and special settings for a Laptop
 This guide walks you through expanding your Proxmox LVM
 
 # 🧱 Resize LVM in Proxmox
