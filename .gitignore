@@ -5,8 +5,8 @@
 
 # Ignore Ansible Sensitive files:
 Ansible/roles/*/vars/main.yml
-inventory.ini
-inventory.yml
+Ansible/inventory.ini
+Ansible/inventory.yml
 
 # Ignore Terraform Sensitive files:
 Terraform/*/terraform.tfvars
