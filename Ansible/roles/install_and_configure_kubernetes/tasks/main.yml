@@ -1,0 +1,584 @@
+---
+# Run this Task on BOTH the control plane and worker nodes.
+# This directory is used to store GPG keys for APT repositories.
+- name: Ensure apt keyrings directory exists 
+  become: true  # Runs the command with elevated privileges (as root).  
+  file:  # Using the file module to manage files and directories.
+    path: /etc/apt/keyrings  # Specifies the path to the directory to manage.
+    state: directory  # Ensures the specified path is a directory.
+    mode: '0755'  # Sets the permissions of the directory to 'rwxr-xr-x'.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# containerd is a container runtime that manages the lifecycle of containers.
+- name: Ensure containerd is installed, if not already present - to utilize the containerd runtime 
+  become: true  # Runs the command with elevated privileges (as root).
+  ansible.builtin.apt:  # Using the apt module to manage packages.
+    name: containerd   # Specifies the name of the package to manage. 
+    state: present     # Ensures the package is installed (does nothing if it's already there).
+    update_cache: yes  # Updates the apt package index before installing
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This directory is used by containerd to store its configuration files.
+- name: Ensure initial configuration /etc/containerd directory exists
+  become: true  # Runs the command with elevated privileges (as root).
+  file:
+    path: /etc/containerd  # Specifies the path to the directory to manage.
+    state: directory  # Ensures the specified path is a directory.
+    owner: root  # Sets the owner of the directory to 'root'.
+    group: root  # Sets the group of the directory to 'root'.
+    mode: '0755'  # Sets the permissions of the directory to 'rwxr-xr-x'.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This file is the default configuration file for containerd, which contains settings for the container runtime.
+- name: Generate the initial configuration default file for containerd - config.toml 
+  become: true  # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to run a command on the remote host.
+    containerd config default 
+  # containerd config default ---> The command to run, which generates the default configuration for containerd.
+  register: containerd_config  # Registers the output of the command to a variable named 'containerd_config'.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This file is the configuration file for containerd, which contains settings for the container runtime.
+- name: Write containerd config.toml 
+  become: true  # Runs the command with elevated privileges (as root).
+  copy:  # Using the copy module to write the configuration file.
+    content: "{{ containerd_config.stdout }}"  # Uses the output from the previous command as the content of the file.
+    dest: /etc/containerd/config.toml  # Specifies the destination path for the configuration file.
+    owner: root  # Sets the owner of the file to 'root'.
+    group: root  # Sets the group of the file to 'root'.
+    mode: '0644'  # Sets the permissions of the file to 'rw-r--r--'.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This task checks if the containerd configuration file exists.
+- name: Fail if /etc/containerd/config.toml does not exist 
+  become: true  # Runs the command with elevated privileges (as root).
+  stat:  # Using the stat module to check the existence of the file.
+    path: /etc/containerd/config.toml  # Specifies the path to the file to check.
+  register: containerd_config_file  # Registers the result of the stat check to a variable named 'containerd_config_file'.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This setting enables the use of systemd cgroups for containerd, which is required for Kubernetes.
+- name: Ensure SystemdCgroup is set to true 
+  become: true  # Runs the command with elevated privileges (as root).
+  replace:  # Using the replace module to modify the configuration file.
+    path: /etc/containerd/config.toml  # Specifies the path to the file to modify.
+    regexp: '^(\s*)SystemdCgroup\s*=\s*false'  # Regular expression to find the line that sets SystemdCgroup to false.
+    replace: '\1SystemdCgroup = true'  # Replacement string to set SystemdCgroup to true.
+  when: containerd_config_file.stat.exists  # This task will only run if the file exists.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step disables swap on the system, which is required for Kubernetes to function properly.
+- name: Disable swap immediately 
+  become: true  # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to disable swap.
+    swapoff -a 
+  # swapoff -a ---> The command to run, which disables all swap devices.
+  ignore_errors: true  # Ignores errors if the command fails (e.g., if swap is already disabled).
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This prevents swap from being enabled again after reboot:
+- name: Ensure swap is disabled permanently by commenting out swap entries in /etc/fstab
+  become: true  # Runs the command with elevated privileges (as root).
+  replace:  # Using the replace module to modify the /etc/fstab file.
+    path: /etc/fstab  # Specifies the path to the file to modify.
+    regexp: '^(\s*[^#\n]+\s+[^#\n]+\s+swap\s+[^#\n]+)'  # Regular expression to find swap entries in the file.
+    replace: '# \1'  # Replacement string to comment out the swap entries.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# Configure kernel settings for Kubernetes networking
+# This setting enables IPv4 forwarding, which is required for Kubernetes networking.
+- name: Ensure net.ipv4.ip_forward is set to 1 (uncommented) 
+  become: true  # Runs the command with elevated privileges (as root).
+  replace:  # Using the replace module to modify the sysctl configuration file.
+    path: /etc/sysctl.conf  # Specifies the path to the sysctl configuration file.
+    regexp: '^\s*#?\s*net\.ipv4\.ip_forward\s*=.*'  # Regular expression to find the line that sets IPv4 forwarding.
+    replace: 'net.ipv4.ip_forward=1'  # Replacement string to enable IPv4 forwarding.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step applies the sysctl settings to the system, ensuring that the changes take effect.
+- name: Apply sysctl settings 
+  become: true  # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to apply sysctl settings.
+    sysctl -p 
+  # sysctl -p ---> The command to apply the sysctl settings.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This module ensures that the br_netfilter kernel module is loaded at boot time, which is required for Kubernetes networking.
+- name: Ensure br_netfilter is listed in /etc/modules-load.d/k8s.conf 
+  become: true  # Runs the command with elevated privileges (as root).
+  lineinfile:  # Using the lineinfile module to ensure a specific line is present in a file.
+    path: /etc/modules-load.d/k8s.conf  # Specifies the path to the file to modify.
+    line: br_netfilter  # The line to ensure is present in the file.
+    create: yes  # Creates the file if it does not exist.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step reboots the system to apply the kernel networking changes made in the previous steps.
+- name: Reboot the system 
+  become: true  # Runs the command with elevated privileges (as root).
+  reboot:  # Using the reboot module to restart the system.
+    msg: "Rebooting to apply kernel networking changes"  # Message to display during reboot.
+    pre_reboot_delay: 5  # Delay before rebooting, allowing time for tasks to complete.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step installs necessary packages for managing APT repositories and downloading files.
+- name: Install required packages for Kubernetes installation 
+  become: true  # Runs the command with elevated privileges (as root).
+  ansible.builtin.apt:  # Using the apt module to manage packages.
+    pkg:  # Specifies the packages to install.
+      - apt-transport-https  # Required for accessing repositories over HTTPS.
+      - ca-certificates  # Required for verifying the authenticity of packages.
+      - curl  # Required for downloading files from the internet.
+      - gpg  # Required for managing GPG keys.
+    state: latest  # Ensures the specified packages are installed at their latest version.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step downloads the GPG key for the Kubernetes APT repository and saves it to a specific location.
+- name: Download Kubernetes apt key and save it to /etc/apt/keyrings 
+  become: true  # Runs the command with elevated privileges (as root).
+  get_url:  # Using the get_url module to download a file from a URL.
+    url: https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key  # The URL of the Kubernetes apt key to download.
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc  # The destination path where the key will be saved.
+    mode: '0644'  # Sets the permissions of the downloaded file to 'rw-r--r--'.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step adds the Kubernetes APT repository to the system's package sources.
+- name: Add Kubernetes apt repository 
+  become: true  # Runs the command with elevated privileges (as root).
+  apt_repository:  # Using the apt_repository module to add a new APT repository.
+  # The repository URL to add, including the path to the GPG keyring.
+    repo: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /
+    state: present  # Ensures the specified repository is present in the system's APT sources.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step installs the necessary Kubernetes packages on the system.
+- name: Install Kubernetes packages 
+  become: true  # Runs the command with elevated privileges (as root).
+  ansible.builtin.apt:  # Using the apt module to manage packages.
+    name:  # Specifies the packages to install.
+      - kubelet  # kubelet is the primary node agent that runs on each node in the cluster.
+      - kubeadm  # kubeadm is a tool for managing Kubernetes clusters, including initialization and joining nodes.
+      - kubectl  # kubectl is the command-line tool for interacting with Kubernetes clusters.
+    state: present  # Ensures the specified packages are installed.
+    update_cache: yes  # Updates the APT package index before installing.
+
+# Run this Task on BOTH the control plane and worker nodes.
+# This step updates the APT package index to ensure the latest packages are available.
+- name: Update apt cache 
+  become: true  # Runs the command with elevated privileges (as root).
+  apt:  # Using the apt module to manage packages.
+    update_cache: yes  # Updates the APT package index to ensure the latest packages are available.
+
+# Run this Task block ONLY on the control plane node.
+# This file is used by kubelet during the bootstrap process.
+- name: Check if bootstrap-kubelet.conf exists on control-plane 
+  stat:  # Using the stat module to check the existence of a file.
+    path: /etc/kubernetes/bootstrap-kubelet.conf  # Specifies the path to the file to check.
+  register: bootstrap_kubelet_conf  # Registers the result of the stat check to a variable named 'bootstrap_kubelet_conf'.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+- block:  # This block will run only if the bootstrap-kubelet.conf file does not exist on the control plane node.
+    # Reset the Kubernetes cluster state
+    - name: Run kubeadm reset  
+      command: >  # Using the command module to reset the Kubernetes cluster state.
+        kubeadm reset -f
+      # kubeadm reset -f ---> The command to reset the Kubernetes cluster state, forcing the reset without confirmation.
+
+    # This service is the primary node agent that runs on each node in the cluster, managing pods and containers.
+    - name: Stop kubelet service 
+      systemd:  # Using the systemd module to manage systemd services.
+        name: kubelet  # Specifies the name of the service to manage.
+        state: stopped  # Ensures the service is stopped.
+        enabled: no  # Ensures the service is not enabled to start on boot.
+    
+    # This service is the container runtime used by Kubernetes to manage containers.
+    - name: Stop containerd service 
+      systemd:  # Using the systemd module to manage systemd services.
+        name: containerd  # Specifies the name of the service to manage.
+        state: stopped  # Ensures the service is stopped.
+        enabled: no  # Ensures the service is not enabled to start on boot.
+
+    # This directory contains static Pod manifests for the control plane components.
+    - name: Remove Kubernetes manifests directory 
+      file:  # Using the file module to manage files and directories.
+        path: /etc/kubernetes/manifests  # Specifies the path to the directory to remove.
+        state: absent  # Ensures the specified directory is removed.
+
+    # This directory contains data for the etcd key-value store used by Kubernetes.
+    - name: Remove etcd data directory  
+      file:  # Using the file module to manage files and directories.
+        path: /var/lib/etcd  # Specifies the path to the directory to remove.
+        state: absent  # Ensures the specified directory is removed.
+
+    # This file is used by kubelet during the bootstrap process.
+    - name: Remove bootstrap-kubelet.conf if exists 
+      file:  # Using the file module to manage files and directories.
+        path: /etc/kubernetes/bootstrap-kubelet.conf  # Specifies the path to the file to remove.
+        state: absent  # Ensures the specified file is removed.
+
+    # This file is the kubelet's configuration file, which contains information about the cluster and how to connect to it.
+    - name: Remove kubelet.conf if exists  
+      file:  # Using the file module to manage files and directories.
+        path: /etc/kubernetes/kubelet.conf  # Specifies the path to the file to remove.
+        state: absent  # Ensures the specified file is removed.
+
+    # This directory contains Kubernetes configuration files, including kubelet and kubeadm configurations.
+    - name: Recreate /etc/kubernetes directory  
+      file:  # Using the file module to manage files and directories.
+        path: /etc/kubernetes  # Specifies the path to the directory to manage.
+        state: directory  # Ensures the specified path is a directory.
+        mode: '0755'  # Sets the permissions of the directory to 'rwxr-xr-x'.
+
+    # This service is the container runtime used by Kubernetes to manage containers.
+    - name: Start containerd service 
+      systemd:  # Using the systemd module to manage systemd services.
+        name: containerd  # Specifies the name of the service to manage.
+        state: started  # Ensures the service is started.
+        enabled: yes  # Ensures the service is enabled to start on boot.
+
+    # This service is the primary node agent that runs on each node in the cluster, managing pods and containers.
+    - name: Start kubelet service  
+      systemd:  # Using the systemd module to manage systemd services.
+        name: kubelet  # Specifies the name of the service to manage.
+        state: started  # Ensures the service is started.
+        enabled: yes  # Ensures the service is enabled to start on boot.
+  when:  # This block will only run if the bootstrap-kubelet.conf file does not exist on the control plane node.
+    - inventory_hostname == "k8s-ctrlr-8888"  # Ensures this block runs only on the control plane node.
+    - not bootstrap_kubelet_conf.stat.exists  # Ensures this block runs only if the bootstrap-kubelet.conf file does not exist.
+
+# Run this Task ONLY on the control plane node.
+# This step initializes the Kubernetes control plane on the specified node.
+- name: Initialize Kubernetes Control Plane 
+  become: true  # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to initialize the Kubernetes control plane.
+    sudo kubeadm init --control-plane-endpoint=192.168.1.241 --node-name k8s-ctrlr-8888 --pod-network-cidr=10.244.0.0/16
+  # kubeadm init  # Initializes the Kubernetes control plane.
+  # --control-plane-endpoint={{ control_plane_endpoint }} --> Specifies the control plane endpoint for the cluster. 
+  # --node-name={{ node_name }} --> Specifies the name of the node being initialized.
+  # --pod-network-cidr=0.244.0.0/16 --> Specifies the CIDR for the pod network, which is required for Flannel CNI.
+  args:  # Additional arguments for the command.
+    creates: /etc/kubernetes/admin.conf  # Prevent re-running if already initialized
+  register: kubeadm_output  # Registers the output of the command to a variable named 'kubeadm_output'.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Run this Task ONLY on the control plane node.
+# This directory is used to store the kubeconfig file for the user.
+- name: Create .kube directory for user 
+  become: true  # Runs the command with elevated privileges (as root).
+  file:  # Using the file module to manage files and directories.
+    path: /home/{{ kube_user }}/.kube  # Specifies the path to the directory to manage.
+    state: directory  # Ensures the specified path is a directory.
+    owner: "{{ kube_user }}"  # Sets the owner of the directory to the specified user.
+    group: "{{ kube_user }}"  # Sets the group of the directory to the specified user.
+    mode: '0755'  # Sets the permissions of the directory to 'rwxr-xr-x'.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Run this Task ONLY on the control plane node.
+# This file is the kubeconfig file for the user, which contains information about the cluster and how to connect to it.
+- name: Copy admin.conf to user's kube config 
+  become: true  # Runs the command with elevated privileges (as root).
+  copy:  # Using the copy module to copy a file from one location to another.
+    src: /etc/kubernetes/admin.conf  # Specifies the source file to copy, which is the Kubernetes admin configuration file.
+    dest: /home/{{ kube_user }}/.kube/config  # Specifies the destination path for the copied file.
+    remote_src: yes  # Indicates that the source file is already on the remote host.
+    owner: "{{ kube_user }}"  # Sets the owner of the copied file to the specified user.
+    group: "{{ kube_user }}"  # Sets the group of the copied file to the specified user.
+    mode: '0644'  # Sets the permissions of the copied file to 'rw-r--r--'.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Run this Task ONLY on the control plane node. 
+# This environment variable is used by kubectl to locate the kubeconfig file.
+- name: Set KUBECONFIG environment variable for user in .bashrc 
+  lineinfile:  # Using the lineinfile module to ensure a specific line is present in a file.
+    path: /home/{{ kube_user }}/.bashrc  # Specifies the path to the file to modify, which is the user's bash configuration file.
+    regexp: '^export KUBECONFIG='  # Regular expression to find the line that sets the KUBECONFIG environment variable.
+    line: 'export KUBECONFIG=$HOME/.kube/config'  # Replacement line to set the KUBECONFIG environment variable to the user's kube config file.
+    owner: "{{ kube_user }}"  # Sets the owner of the file to the specified user.
+    group: "{{ kube_user }}"  # Sets the group of the file to the specified user.
+    create: yes  # Creates the file if it does not exist.
+    state: present  # Ensures the specified line is present in the file.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Run this Task ONLY on the control plane node.
+# This environment variable is used by kubectl to locate the kubeconfig file.
+- name: Set KUBECONFIG environment variable for user in .profile  
+  lineinfile:  # Using the lineinfile module to ensure a specific line is present in a file.
+    path: /home/{{ kube_user }}/.profile  # Specifies the path to the file to modify, which is the user's profile configuration file.
+    regexp: '^export KUBECONFIG='  # Regular expression to find the line that sets the KUBECONFIG environment variable.
+    line: 'export KUBECONFIG=$HOME/.kube/config'  # Replacement line to set the KUBECONFIG environment variable to the user's kube config file.
+    owner: "{{ kube_user }}"  # Sets the owner of the file to the specified user.
+    group: "{{ kube_user }}"  # Sets the group of the file to the specified user.
+    create: yes  # Creates the file if it does not exist.
+    state: present  # Ensures the specified line is present in the file.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Run this Task ONLY on the control plane node.
+# Flannel is a Container Network Interface (CNI) plugin for Kubernetes that provides networking capabilities.
+- name: Install Flannel CNI plugin 
+  become: true  # Runs the command with elevated privileges (as root).
+  become_user: "{{ kube_user }}"  # Runs the command as the specified user (e.g., 'kube_user').
+  command: >  # Using the command module to apply the Flannel CNI plugin configuration.
+    kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+  # Applies the Flannel CNI plugin configuration to the Kubernetes cluster.
+  environment:  # Sets environment variables for the command.
+    KUBECONFIG: /home/{{ kube_user }}/.kube/config  # Specifies the kubeconfig file to use for kubectl commands.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Step : Generate kubeadm join command on control-plane node
+# Run this Task ONLY on the control plane node.
+- name: Generate kubeadm join command on control-plane 
+  become: true # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to generate the kubeadm join command.
+    kubeadm token create --print-join-command
+  # Generates a new token for joining nodes to the cluster and prints the join command.
+  register: join_output  # Registers the output of the command to a variable named 'join_output'.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Step : Set kubeadm join command as a fact on control-plane node
+# Run this Task ONLY on the control plane node.
+- name: Set kubeadm join command as a fact on control-plane 
+  set_fact:  # Using the set_fact module to set a variable that can be used later in the playbook.
+    kubeadm_join_command: "{{ join_output.stdout | trim | replace('\"', '') }}"  # Sets the 'kubeadm_join_command' variable to the output of the previous command.
+  delegate_to: localhost  # Delegates the task to the localhost, allowing the variable to be set on the control plane node.
+  run_once: true  # Ensures this task runs only once, even if there are multiple control plane nodes.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Step : Retrieve join command on worker nodes from control-plane 
+# Run this Task ONLY on the worker nodes.
+- name: Get join command from controller hostvars 
+  set_fact:  # Using the set_fact module to set a variable that can be used later in the playbook.
+  # Retrieves the 'kubeadm_join_command' variable from the control plane node's hostvars.
+    kubeadm_join_command: "{{ hostvars['k8s-ctrlr-8888'].kubeadm_join_command | default('') }}" 
+  when:  # This task will only run on the worker nodes.
+    - inventory_hostname != "k8s-ctrlr-8888"  # Ensures this task runs only on worker nodes.
+    - "'kubeadm_join_command' in hostvars['k8s-ctrlr-8888']"  # Checks if the 'kubeadm_join_command' variable exists in the control plane node's hostvars.
+
+# Step : Check if kubelet.conf exists on worker nodes
+# Run this Task ONLY on the worker nodes.
+# This step checks if the kubelet.conf file exists on the worker node.
+- name: Check if kubelet.conf exists on worker nodes 
+  stat:  # Using the stat module to check the existence of a file.
+    path: /etc/kubernetes/kubelet.conf  # Specifies the path to the file to check.
+  register: kubelet_conf_stat  # Registers the result of the stat check to a variable named 'kubelet_conf_stat'.
+  when: inventory_hostname != "k8s-ctrlr-8888"  # This task will only run on the worker nodes.
+
+# Step : Check node Ready status in cluster (delegated to control-plane)
+# Run this Task ONLY on the worker nodes.
+# This step checks the status of the node in the Kubernetes cluster.
+- name: Check if node is Ready in cluster 
+  become: true  # Runs the command with elevated privileges (as root).
+  shell: kubectl get node {{ inventory_hostname }} --no-headers | awk '{print $2}'  # Retrieves the status of the node in the cluster. 
+  register: node_status_check  # Registers the output of the command to a variable named 'node_status_check'.
+  failed_when: false  # Prevents the task from failing if the command returns a non-zero exit code.
+  changed_when: false  # Prevents the task from being marked as changed, even if it modifies the system.
+  environment:  # Sets environment variables for the command.
+    KUBECONFIG: /etc/kubernetes/admin.conf  # Specifies the kubeconfig file to use for kubectl commands.
+  delegate_to: k8s-ctrlr-8888  # Delegates the task to the control plane node (k8s-ctrlr-8888) to check the node status.
+  run_once: false  # Ensures this task runs on all worker nodes, not just once.
+  when: inventory_hostname != "k8s-ctrlr-8888"  # This task will only run on the worker nodes.
+ 
+# Step : Reset kubeadm on worker node if kubelet.conf exists and node not Ready
+# Run this Task ONLY on the worker nodes.
+# This step resets the kubeadm state on the worker node if it is not Ready or not joined to the cluster.
+- name: Reset kubeadm if not Ready or not joined 
+  become: true  # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to reset the kubeadm state on the worker node.
+    kubeadm reset -f
+  # kubeadm reset -f ---> The command to reset the kubeadm state on the worker node, forcing the reset without confirmation.
+  when:  # This task will only run if the following conditions are met:
+    - inventory_hostname != "k8s-ctrlr-8888"  # Ensures this task runs only on worker nodes.
+    - kubelet_conf_stat.stat.exists  # Checks if the kubelet.conf file exists on the worker node.
+    - node_status_check.stdout != "Ready"  # Checks if the node status is not Ready.
+
+# Step : Remove Kubernetes config directories on worker node if node not Ready
+# Run this Task ONLY on the worker nodes.
+# This task removes Kubernetes configuration directories on worker nodes if the node is not Ready.
+- name: Remove Kubernetes config directories if node not Ready 
+  become: true  # Runs the command with elevated privileges (as root).
+  file:  # Using the file module to manage files and directories.
+    path: "{{ item }}"  # Specifies the path to the directory to remove, using a loop to iterate over multiple directories.
+    state: absent  # Ensures the specified directory is removed.
+  loop:  # Loops through the specified directories to remove them.
+    - /etc/kubernetes   # This directory contains Kubernetes configuration files, including kubelet and kubeadm configurations.
+    - /var/lib/kubelet  # This directory contains kubelet state and configuration files.
+    - /etc/cni/net.d    # This directory contains CNI (Container Network Interface) configuration files.
+  when:  # This task will only run if the following conditions are met:
+    - inventory_hostname != "k8s-ctrlr-8888"  # Ensures this task runs only on worker nodes.
+    - node_status_check.stdout != "Ready"  # Checks if the node status is not Ready.
+
+# Step : Ensure /etc/cni/net.d exists and Flannel CNI config is present on worker nodes
+# Run this Task ONLY on the worker nodes.
+# This step ensures that the /etc/cni/net.d directory exists on worker nodes, which is required for CNI plugins like Flannel.
+- name: Ensure /etc/cni/net.d directory exists on worker nodes 
+  file:  # Using the file module to manage files and directories.
+    path: /etc/cni/net.d  # Specifies the path to the directory to manage.
+    state: directory  # Ensures the specified path is a directory.
+    owner: root  # Sets the owner of the directory to 'root'.
+    group: root  # Sets the group of the directory to 'root'.
+    mode: '0755'  # Sets the permissions of the directory to 'rwxr-xr-x'.
+  become: true  # Runs the command with elevated privileges (as root).
+  when: inventory_hostname != "k8s-ctrlr-8888"  # This task will only run on the worker nodes.
+
+# Step : Write Flannel CNI config file on worker nodes
+# Run this Task ONLY on the worker nodes.
+# This step writes the Flannel CNI configuration file on worker nodes, which is required for Flannel CNI to function properly.
+- name: Write Flannel CNI config file on worker nodes 
+  become: true  # Runs the command with elevated privileges (as root).
+  copy:  # Using the copy module to write the Flannel CNI configuration file.
+    dest: /etc/cni/net.d/10-flannel.conflist  # Specifies the destination path for the Flannel CNI configuration file.
+    # The content of the Flannel CNI configuration file, which specifies the network settings for Flannel CNI.
+    # This configuration includes the name of the network, the plugins used (Flannel and Portmap), and the settings for the Flannel plugin.
+    # The 'isDefaultGateway' setting indicates that this node will be the default gateway for the network.
+    # The 'portMappings' capability allows the Portmap plugin to handle port mappings.
+    # The 'capabilities' section specifies that port mappings are supported.
+    # The 'type' field specifies the type of the CNI plugin being used, which is 'flannel' in this case.
+    # The 'delegate' section contains additional settings for the Flannel plugin, such as whether it should be the default gateway.
+    # The 'plugins' section lists the plugins used in the CNI configuration.
+    # The 'name' field specifies the name of the CNI configuration, which is 'cbr0' in this case.
+    # The 'cbr0' name is commonly used for the default bridge network in Kubernetes.
+    # The 'flannel' plugin is a popular CNI plugin for Kubernetes that provides networking capabilities.
+    # The 'portmap' plugin is used to handle port mappings for Kubernetes services.
+    content: |
+      {
+        "name": "cbr0",
+        "plugins": [
+          {
+            "type": "flannel",
+            "delegate": {
+              "isDefaultGateway": true
+            }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {
+              "portMappings": true
+            }
+          }
+        ]
+      }
+    owner: root  # Sets the owner of the file to 'root'.
+    group: root  # Sets the group of the file to 'root'.
+    mode: '0644'  # Sets the permissions of the file to 'rw-r--r--'.
+  when: inventory_hostname != "k8s-ctrlr-8888"  # This task will only run on the worker nodes.
+
+# Step : Restart kubelet on worker node
+# Run this Task ONLY on the worker nodes.
+# This step restarts the kubelet service on worker nodes to apply the changes made in the previous steps.
+- name: Restart kubelet on worker node 
+  become: true  # Runs the command with elevated privileges (as root).
+  systemd:  # Using the systemd module to manage systemd services.
+    name: kubelet  # Specifies the name of the service to manage, which is 'kubelet'.
+    state: restarted  # Ensures the service is restarted to apply the changes made in the previous steps.
+    enabled: yes  # Ensures the service is enabled to start on boot.
+  when: inventory_hostname != "k8s-ctrlr-8888"  # This task will only run on the worker nodes.
+
+# Run this Task ONLY on the worker nodes. 
+- name: Debug kubeadm join command from controller  
+  debug:  # Using the debug module to display information.
+    msg: "{{ kubeadm_join_command | default('not set') }}"  # Displays the value of the 'kubeadm_join_command' variable, or 'not set' if it is not defined.
+  when: inventory_hostname != "k8s-ctrlr-8888"  # This task will only run on the worker nodes.
+
+# Step : Join the worker node to the Kubernetes cluster if not Ready
+# Run this Task ONLY on the worker nodes.
+# This step joins the worker node to the Kubernetes cluster using the kubeadm join command generated earlier.
+- name: Join node to the Kubernetes cluster 
+  become: true  # Runs the command with elevated privileges (as root).
+  # Joins the worker node to the Kubernetes cluster using the kubeadm join command generated earlier.
+  shell: "{{ kubeadm_join_command }}"  
+  # Using the shell module to execute the kubeadm join command.
+  args:  # Additional arguments for the command.
+    executable: /bin/bash  # Specifies the shell to use for executing the command.
+  when:  # This task will only run if the following conditions are met:
+    - inventory_hostname != "k8s-ctrlr-8888"  # Ensures this task runs only on worker nodes.
+    - node_status_check.stdout != "Ready"  # Checks if the node status is not Ready, indicating that the node has not yet joined the cluster.
+
+# Step : Label worker node with role=worker
+# Run this Task ONLY on the worker nodes.
+# This step labels the worker node with the role 'worker', which is used to identify the node's role in the Kubernetes cluster.
+- name: Label worker node with role=worker  
+  become: true  # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to label the worker node with the role 'worker'.
+    kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker=
+  # kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker= ---> The command to label the worker node with the role 'worker'.
+  environment:  # Sets environment variables for the command.
+    KUBECONFIG: /etc/kubernetes/admin.conf  # Specifies the kubeconfig file to use for kubectl commands.
+  delegate_to: k8s-ctrlr-8888  # Delegates the task to the control plane node (k8s-ctrlr-8888) to label the worker node.
+  when: inventory_hostname != "k8s-ctrlr-8888"  # This task will only run on the worker nodes.
+
+# Step : Restart containerd to apply configuration changes
+# Run this Task on BOTH the control plane and worker nodes.
+# This task restarts the containerd service to apply any configuration changes made during the playbook execution.
+- name: Restart containerd to apply configuration changes 
+  become: true  # Runs the command with elevated privileges (as root).
+  systemd:  # Using the systemd module to manage systemd services.
+    name: containerd  # Specifies the name of the service to manage, which is 'containerd'.
+    state: restarted  # Ensures the service is restarted to apply the configuration changes made in the previous steps.
+
+# Step : Wait for all Kubernetes nodes to be Ready (runs only on control-plane)
+# Run this Task ONLY on the control plane node.
+# This task waits for all nodes in the Kubernetes cluster to be in the 'Ready' state.
+- name: Wait for all Kubernetes nodes to be Ready 
+  become: true  # Runs the command with elevated privileges (as root).
+  shell: |  # Using the shell module to check the status of all nodes in the Kubernetes cluster.
+    bash -c 'kubectl get nodes --no-headers | awk '\''{print $2}'\'' | grep -vc Ready'
+  # kubectl get nodes --no-headers ---> Retrieves the status of all nodes in the Kubernetes cluster without headers.
+  # awk '{print $2}' ---> Extracts the second column from the output, which contains the status of each node.
+  # grep -vc Ready ---> Counts the number of nodes that are not in the 'Ready' state.
+  # The command returns the count of nodes that are not Ready.
+  # If the count is zero, it means all nodes are Ready.
+  register: not_ready_nodes
+  until: not_ready_nodes.stdout == "0"
+  retries: 15
+  delay: 5
+  changed_when: false
+  failed_when: not (not_ready_nodes.stdout is defined and not_ready_nodes.stdout|int == 0)
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  when: inventory_hostname == "k8s-ctrlr-8888"
+
+# Step : Show final node status on control-plane
+# Run this Task ONLY on the control plane node.
+# Retrieves the final status of all nodes in the Kubernetes cluster.
+- name: Show final node status 
+  become: true  # Runs the command with elevated privileges (as root).
+  command: >  # Using the command module to retrieve the final status of all nodes in the Kubernetes cluster.
+    kubectl get nodes -o wide
+  # kubectl get nodes -o wide ---> Retrieves detailed information about all nodes in the Kubernetes cluster.
+  # The '-o wide' option provides additional information about each node, such as its internal and external IP addresses, operating system, and kernel version.
+  # This command is used to display the final status of all nodes in the cluster after the playbook execution.
+  # It helps to verify that all nodes are in the 'Ready' state and have been successfully joined to the cluster.
+  # The output will show the status of each node, including whether it is Ready, NotReady, or in any other state.
+  # The output will also include additional information about each node, such as its internal and external IP addresses, operating system, and kernel version.
+  # This command is run on the control plane node to provide a summary of the cluster's node status.
+  register: final_node_status  # Registers the output of the command to a variable named 'final_node_status'.
+  environment:  # Sets environment variables for the command.
+    KUBECONFIG: /etc/kubernetes/admin.conf  # Specifies the kubeconfig file to use for kubectl commands.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+# Step : Display final node status on control-plane
+# Run this Task ONLY on the control plane node.
+# This task displays the final status of all nodes in the Kubernetes cluster.
+- name: Display nodes status 
+  debug:  # Using the debug module to display the final status of all nodes in the Kubernetes cluster.
+    var: final_node_status.stdout_lines  # Displays the output of the previous command, which contains the final status of all nodes in the cluster.
+  when: inventory_hostname == "k8s-ctrlr-8888"  # This task will only run on the control plane node.
+
+
+
+
+# Commands to run after the playbook execution:
+
+# To check the status of the Kubernetes` nodes after running the playbook, you can use:
+# export KUBECONFIG=/etc/kubernetes/admin.conf
+# kubectl get nodes -o wide
+
+# Run the below commands to clean up the Kubernetes installation if it is stuck and you want to reset the cluster:
+
+# sudo rm /etc/apt/sources.list.d/kubernetes.list
+# sudo rm /etc/apt/sources.list.d/pkgs_k8s_io_core_stable_v1_30_deb.list
+# sudo rm -f /usr/share/keyrings/kubernetes-archive-keyring.gpg
+# sudo rm -f /etc/apt/keyrings/kubernetes-apt-keyring.asc
+# sudo apt autoremove --purge
+# sudo apt update
+# sudo kubeadm reset -f
+# sudo rm -rf /etc/kubernetes /var/lib/etcd /var/lib/kubelet /etc/cni/net.d
+# sudo systemctl restart containerd

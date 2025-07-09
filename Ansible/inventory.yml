@@ -10,12 +10,18 @@ all:
       vars:
         ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
-    worker_cluster:
-      hosts:
-        worker-8888:
-          ansible_host: 192.168.1.241
-        worker-9999:
-          ansible_host: 192.168.1.242
+    kubernetes_cluster:
+      children:
+        k8s_control_plane:
+          hosts:
+            k8s-ctrlr-8888:
+              ansible_host: 192.168.1.241
+        k8s_worker_nodes:
+          hosts:
+            k8s-node-8000:
+              ansible_host: 192.168.1.242
+            k8s-node-8100:
+              ansible_host: 192.168.1.243
       vars:
         ansible_user: root
         ansible_ssh_private_key_file: ~/.ssh/id_ed25519

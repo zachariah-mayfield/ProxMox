@@ -17,13 +17,13 @@ variable "proxmox_api_token" {
 variable "vm_template_id" {
   description = "VM ID for the template VM"
   type        = number
-  default     = 7000
+  default     = 1111
 }
 
 variable "vm_template_name" {
   description = "Name for the template VM"
   type        = string
-  default     = "template-7000"
+  default     = "template-1111"
 }
 
 variable "cloud_init_root" {

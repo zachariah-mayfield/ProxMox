@@ -1,0 +1,8 @@
+---
+- name: Install and configure Kubernetes on Proxmox VMs
+  hosts: kubernetes_cluster
+  become: true
+  become_method: sudo
+  gather_facts: true
+  roles:
+    - install_and_configure_kubernetes
