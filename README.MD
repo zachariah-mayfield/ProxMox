@@ -11,7 +11,7 @@
 - Video Card: MSI Gaming GeForce RTX 3060 12GB 15 Gbps GDRR6 192-Bit Gaming X Trio 
 - Monitors: (2) SAMSUNG 49-inch Odyssey G9 Gaming Monitor | QHD, 240hz, 1000R Curved, QLED, NVIDIA G-SYNC & FreeSync | LC49G95TSSNXZA Model
 - Keyboard: Razer BlackWidow V3 Pro Mechanical Wireless Gaming Keyboard
-- Mmouse: Razer Basilisk Ultimate Hyperspeed Wireless Gaming Mouse w/ Charging Dock
+- Mouse: Razer Basilisk Ultimate Hyperspeed Wireless Gaming Mouse w/ Charging Dock
 - Gaming Controler: Xbox Wireless Controller – Electric Volt for Xbox Series X and charging Dock 
 - (2) Ergotron – HX Single Ultrawide Monitor Arm, VESA Wall Mount – for Monitors Up to 49 Inches, 20 to 42 lbs, Less Than 6 Inch Display Depth 
 
