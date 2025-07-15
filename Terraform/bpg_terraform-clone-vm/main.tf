@@ -18,7 +18,8 @@ provider "proxmox" {
   ssh {
     agent        = true
     username     = "root"
-    private_key = trimspace(file("~/.ssh/id_ed25519"))  # ✅ This should be the **private** key!
+    #private_key = trimspace(file("~/.ssh/id_ed25519"))  # ✅ This should be the **private** key! # this version does not work with Azure DevOps
+    private_key  = trimspace(file("/home/ubuntu/.ssh/id_ed25519")) # ✅ This should be the **private** key! # this version works with Azure DevOps
   }
 }
 
