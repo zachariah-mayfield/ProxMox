@@ -30,7 +30,7 @@ stages:
           - task: DownloadSecureFile@1
             name: sshKeyFile
             inputs:
-              secureFile: id_ed25519  # <-- Name of your uploaded private key file in Secure Files
+              secureFile: id_rsa_pem  # 👈 exact name of your uploaded file  # <-- Name of your uploaded private key file in Secure Files
 
           - script: |
               echo "Starting ssh-agent..."
