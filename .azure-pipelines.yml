@@ -26,5 +26,5 @@ stages:
 
           - script: |
               echo "Applying Terraform changes"
-              terraform -chdir=$(TF_ROOT) apply -auto-approve
+              terraform -chdir=$(TF_ROOT) apply -auto-approve -input=false
             displayName: 'Terraform Apply'
