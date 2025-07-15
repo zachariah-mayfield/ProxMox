@@ -18,8 +18,9 @@ provider "proxmox" {
   ssh {
     agent        = true # The following settings are for SSH access to Proxmox
     username     = "root" # Use the username that has access to Proxmox
-    private_key  = trimspace(file("~/.ssh/id_ed25519"))  # ✅ This should be the **private** key! # this version does not work with Azure DevOps
-    # private_key  = trimspace(file("/home/ubuntu/.ssh/id_ed25519")) # ✅ This should be the **private** key! # this version works with Azure DevOps
+    # private_key  = trimspace(file("~/.ssh/id_ed25519"))  # ✅ This should be the **private** key! # this version does not work with Azure DevOps
+    # 👇 Read from environment-injected variable set in pipeline before running Terraform
+    private_key = trimspace(file(var.ssh_private_key_path))
   }
 }
 
