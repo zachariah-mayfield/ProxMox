@@ -14,7 +14,7 @@ stages:
     jobs:
       - job: terraform_plan_apply
         variables:
-          - group: Private_Variables  # Only needed if you use secret vars like `proxmox_api_token`
+          - group: Private_Variables  # Only needed if you're using secret vars like `proxmox_api_token`
 
         steps:
           # --- Download tfvars file ---
@@ -28,14 +28,13 @@ stages:
               mv "$(tfvarsFile.secureFilePath)" "$(TF_ROOT)/secrets.auto.tfvars"
             displayName: 'Move secrets.auto.tfvars to TF directory'
 
-          # --- Download and Load Private SSH Key --- 
+          # --- Download and Load Private SSH Key ---
           - task: DownloadSecureFile@1
             name: sshKeyFile
             inputs:
-              secureFile: id_rsa_pem  # This must match the name of your uploaded PEM-format private key
+              secureFile: id_rsa_pem  # This is your uploaded **private** key
 
           - script: |
-              echo "Starting ssh-agent..." 
               echo "🔐 Showing private key snippet:"
               head -n 10 "$(sshKeyFile.secureFilePath)"
 
@@ -50,18 +49,25 @@ stages:
               ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
             displayName: 'Start ssh-agent and add SSH private key + Test SSH connection'
 
-          # --- Terraform Workflow ---
+          # --- Terraform Init ---
           - script: |
               echo "🚀 Running Terraform Init..."
               terraform -chdir=$(TF_ROOT) init
             displayName: 'Terraform Init'
 
+          # --- Terraform Plan ---
           - script: |
               echo "🔍 Running Terraform Plan..."
-              terraform -chdir=$(TF_ROOT) plan -var-file="secrets.auto.tfvars"
+              terraform -chdir=$(TF_ROOT) plan \
+                -var "ssh_private_key_path=$(sshKeyFile.secureFilePath)" \
+                -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Plan'
 
+          # --- Terraform Apply ---
           - script: |
               echo "⚙️ Applying Terraform Changes..."
-              terraform -chdir=$(TF_ROOT) apply -auto-approve -input=false -var-file="secrets.auto.tfvars"
+              terraform -chdir=$(TF_ROOT) apply \
+                -auto-approve -input=false \
+                -var "ssh_private_key_path=$(sshKeyFile.secureFilePath)" \
+                -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Apply'
