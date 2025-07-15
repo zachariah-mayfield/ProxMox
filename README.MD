@@ -71,8 +71,8 @@ chmod 700 /root/.ssh
 
 6. **Add your MacBook’s public key (the whole single line) on Proxmox server on a new line BELOW the existing key in that file:**
 ```bash
-
 # bash
+
 nano /root/.ssh/authorized_keys
 ```
 
