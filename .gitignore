@@ -13,6 +13,7 @@ Ansible/inventory.yml
 
 # Ignore Terraform Sensitive files:
 Terraform/*/terraform.tfvars
+Terraform/*/secrets.auto.tfvars
 Terraform/*/cloudinit/*
 *.tfvars
 
