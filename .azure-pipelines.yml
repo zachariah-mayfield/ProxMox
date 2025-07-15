@@ -14,8 +14,7 @@ stages:
     jobs:
       - job: terraform_plan_apply
         variables:
-          # If you use a variable group for SSH_PRIVATE_KEY, reference it here:
-          - group: Private_Variables
+          - group: Private_Variables  # Keep if you use any other secrets here
         steps:
           - task: DownloadSecureFile@1
             name: tfvarsFile
@@ -27,13 +26,16 @@ stages:
               mv "$(tfvarsFile.secureFilePath)" "$(TF_ROOT)/secrets.auto.tfvars"
             displayName: 'Move secrets.auto.tfvars to TF directory'
 
-          # --- START SSH AGENT SETUP USING SECRET VARIABLE ---
+          # --- START SSH AGENT SETUP USING SECURE FILE ---
+          - task: DownloadSecureFile@1
+            name: sshKeyFile
+            inputs:
+              secureFile: id_ed25519  # <-- Name of your uploaded private key file in Secure Files
+
           - script: |
               echo "Starting ssh-agent..."
               eval "$(ssh-agent -s)"
-              printf '%b' "$SSH_PRIVATE_KEY" > id_ed25519
-              chmod 600 id_ed25519
-              ssh-add id_ed25519
+              ssh-add "$(sshKeyFile.secureFilePath)"
             displayName: 'Start ssh-agent and add SSH private key'
           # --- END SSH AGENT SETUP ---
 
