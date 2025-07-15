@@ -99,6 +99,12 @@ variable "ssh_key_path" {
   type        = string
 }
 
+variable "ssh_private_key_path" {
+  description = "Path to the SSH private key for Proxmox access - This will be set in the Azure DevOps pipeline as a variable."
+  type        = string
+}
+
+
 variable "vm_mac_addresses" {
   description = "Optional MAC addresses per VM"
   type        = map(string)
