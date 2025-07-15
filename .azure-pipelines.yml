@@ -28,7 +28,7 @@ stages:
               mv "$(tfvarsFile.secureFilePath)" "$(TF_ROOT)/secrets.auto.tfvars"
             displayName: 'Move secrets.auto.tfvars to TF directory'
 
-          # --- Download and Load Private SSH Key ---
+          # --- Download and Load Private SSH Key --- 
           - task: DownloadSecureFile@1
             name: sshKeyFile
             inputs:
