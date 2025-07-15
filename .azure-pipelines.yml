@@ -7,7 +7,7 @@ pool:
     - agent.name -equals automation-9999  # Your agent's name (optional)
 
 variables:
-  TF_ROOT: './Terraform'   # Path to your Terraform code folder
+  TF_ROOT: './Terraform/bpg_terraform-clone-vm'
 
 stages:
   - stage: Terraform
