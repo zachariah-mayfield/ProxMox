@@ -31,11 +31,10 @@ stages:
           - script: |
               echo "Starting ssh-agent..."
               eval "$(ssh-agent -s)"
-              echo "$SSH_PRIVATE_KEY" > id_ed25519
+              printf '%b' "$SSH_PRIVATE_KEY" > id_ed25519
               chmod 600 id_ed25519
               ssh-add id_ed25519
             displayName: 'Start ssh-agent and add SSH private key'
-
           # --- END SSH AGENT SETUP ---
 
           - script: |
