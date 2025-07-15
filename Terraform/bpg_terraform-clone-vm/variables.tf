@@ -141,28 +141,28 @@ variable vm_configs {
             #ip_address   = "192.168.1.240/24"
             #gateway      = "192.168.1.254"
         }
-        "vm-8888" = {
-            target_vm_id        = 8888
-            target_vm_name      = "worker-8888"
-            memory       = 8192
-            cpu_sockets  = 1
-            cpu_cores    = 4
-            disk_size    = 50
-            #mac_address  = "AA:BB:CC:DD:88:88" # Optional MAC address, change if needed
-            #ip_address   = "dhcp" # Use "dhcp" for DHCP
-            #gateway      = "dhcp" # Ommit if using "dhcp"
-        }
-        "vm-9999" = {
-            target_vm_id        = 9999
-            target_vm_name      = "worker-9999"
-            memory       = 8192
-            cpu_sockets  = 1
-            cpu_cores    = 4
-            disk_size    = 50
-            #mac_address  = null # Optional MAC address, change if needed
-            #ip_address   = "dhcp" # Use "dhcp" for DHCP
-            #gateway      = "dhcp" # Ommit if using "dhcp"
-        }
+        # "vm-8888" = {
+        #     target_vm_id        = 8888
+        #     target_vm_name      = "worker-8888"
+        #     memory       = 8192
+        #     cpu_sockets  = 1
+        #     cpu_cores    = 4
+        #     disk_size    = 50
+        #     #mac_address  = "AA:BB:CC:DD:88:88" # Optional MAC address, change if needed
+        #     #ip_address   = "dhcp" # Use "dhcp" for DHCP
+        #     #gateway      = "dhcp" # Ommit if using "dhcp"
+        # }
+        # "vm-9999" = {
+        #     target_vm_id        = 9999
+        #     target_vm_name      = "worker-9999"
+        #     memory       = 8192
+        #     cpu_sockets  = 1
+        #     cpu_cores    = 4
+        #     disk_size    = 50
+        #     #mac_address  = null # Optional MAC address, change if needed
+        #     #ip_address   = "dhcp" # Use "dhcp" for DHCP
+        #     #gateway      = "dhcp" # Ommit if using "dhcp"
+        # }
     }
 } 
 
