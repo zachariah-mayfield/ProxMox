@@ -1,0 +1,8 @@
+---
+- name: Import Ubuntu Cloud Image and Create Proxmox VM Template
+  hosts: proxmox
+  become: true
+  become_method: sudo
+  gather_facts: false
+  roles:
+    - create_vm_template

@@ -1,0 +1,8 @@
+---
+- name: Run Terraform automation
+  hosts: localhost
+  become: true
+  become_method: sudo
+  gather_facts: false
+  roles:
+    - terraform_runner

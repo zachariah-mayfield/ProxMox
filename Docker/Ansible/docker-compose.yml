@@ -1,0 +1,11 @@
+services:
+  ansible:
+    build: .
+    container_name: ansible
+    image: ansible
+    volumes:
+      - ${HOME}/GitHub/Main/ProxMox/Ansible:/workspace
+      - ${HOME}/.ssh:/root/.ssh:ro
+    working_dir: /workspace
+    environment:
+      ANSIBLE_HOST_KEY_CHECKING: "False"

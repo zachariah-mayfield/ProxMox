@@ -1,0 +1,12 @@
+---
+# Default variables - adjust to your environment
+# Proxmox API connection
+
+# proxmox_api_host: ---> "is the IP address or hostname of your Proxmox server."
+# proxmox_api_host: "10.10.10.25" # EXAMPLE
+
+vm_ids:
+  #- 7000
+  - 7777
+  - 8888
+  - 9999

@@ -1,0 +1,8 @@
+---
+- name: Stop and Delete Proxmox VMs
+  hosts: localhost
+  become: true
+  become_method: sudo
+  gather_facts: false
+  roles:
+    - delete_vms

@@ -1,0 +1,112 @@
+---
+# Default variables - adjust to your environment
+proxmox_host: ""
+proxmox_api_user: ""
+proxmox_api_token_secret: ""
+
+vm_name: ubuntu-vm
+vm_id: 100
+node_name: corsair700d
+vm_cores: 4
+vm_memory: 8192
+vm_disk_size: 50
+iso_image: local:iso/ubuntu-24.04.1-live-server-amd64.iso
+seed_image: local:iso/seed.iso
+seed_iso_name: seed.iso
+datastore: nvme_pool
+vm_user: ubuntu
+ssh_pub_key_path: ~/.ssh/id_ed25519.pub
+
+
+# Optional static IP config (empty means DHCP)
+vm_ip: ""
+vm_gateway: ""
+vm_nameservers: [1.1.1.1, 8.8.8.8]
+vm_netmask: 24
+vm_interface: "ens18"
+
+
+
+---
+# Proxmox API connection details
+proxmox_api_host: ""
+proxmox_api_user: "root@pam"
+proxmox_api_token_id: "terraform"
+proxmox_api_token_secret: ""
+
+# Proxmox node and storage
+proxmox_node: "corsair700d"
+storage_name: "nvme_pool"          # For VM disks (ZFS)
+iso_storage_name: "local"           # For ISOs (directory storage)
+
+# Template VM ID and name
+template_vm_id: 9000
+template_vm_name: "ubuntu-template"
+
+# New VM details
+target_vm_id: 9100          # change for each new VM
+target_vm_name: "ubuntu-vm-9100"
+
+# Cloud-init SSH key for user access
+cloudinit_ssh_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+cloudinit_autologin: true
+
+# Guest agent and IP retrieval settings
+enable_guest_agent: true
+guest_agent_check_retries: 15
+guest_agent_check_delay: 10
+guest_network_check_retries: 10
+guest_network_check_delay: 10
+ssh_wait_timeout: 300
+ssh_wait_delay: 10
+
+# Ensure qemu-guest-agent is installed on the VM (Debian/Ubuntu)
+# You can add this to your Ansible provisioning or cloud-init:
+# apt install -y qemu-guest-agent
+
+# Network settings
+target_vm_ip: ""  # Default IP if guest agent fails
+
+
+
+
+
+
+---
+# Default variables - adjust to your environment
+# Proxmox API connection
+proxmox_api_host: ""
+proxmox_api_user: "root@pam"
+proxmox_api_token_id: "terraform"
+proxmox_api_token_secret: ""   # Set securely via vault or environment
+
+# Cloud-Init user setup
+ci_user: "ubuntu"
+ci_password: "ubuntu"  # Change to something secure or manage via Ansible Vault
+ssh_pubkey: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+# Proxmox node and storage
+proxmox_node: "corsair700d"
+storage_name: "nvme_pool"      # Your ZFS or storage pool name
+
+# VM settings
+vm_id: 9000                   # Unique VM ID for the template
+vm_name: "ubuntu-template"   # Name of the VM/template
+memory: 8192                 # RAM in MB
+cores: 4                     # Number of CPU cores
+cpu_type: "host"             # CPU type to passthrough host CPU features
+
+# Networking
+net_bridge: "vmbr0"
+
+# Disk
+disk_size: 50             # Size of the blank disk created initially
+bootdisk: "scsi0"            # Boot disk device name
+scsihw: "virtio-scsi-pci"   # SCSI controller type
+
+# Agent and boot options
+agent_enabled: true          # Enable QEMU guest agent
+onboot: false                # Whether VM starts on host boot
+
+# Cloud image location (already uploaded to Proxmox node)
+cloud_image_path: "/var/lib/vz/template/iso/jammy-server-cloudimg-amd64.img"

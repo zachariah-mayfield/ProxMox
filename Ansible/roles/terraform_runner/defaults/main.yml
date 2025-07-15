@@ -1,0 +1,9 @@
+---
+terraform_state_files:
+  - "{{ terraform_dir }}/.terraform"
+  - "{{ terraform_dir }}/.terraform.lock.hcl"
+  - "{{ terraform_dir }}/terraform.tfstate"
+  - "{{ terraform_dir }}/terraform.tfstate.backup"
+
+
+terraform_dir: "{{ playbook_dir }}/terraform"

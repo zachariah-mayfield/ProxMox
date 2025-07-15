@@ -1,0 +1,21 @@
+# .gitignore
+
+# Environment specific file(s)
+*.env
+
+# Ignore Ansible Sensitive files:
+Ansible/roles/*/vars/main.yml
+Ansible/inventory.ini
+Ansible/inventory.yml
+
+# Ignore Terraform Sensitive files:
+Terraform/*/terraform.tfvars
+Terraform/*/cloudinit/*
+*.tfvars
+
+# Ignore these Terraform Artifact folders and files: 
+# (Terraform plugin cache & state) & (Terraform lock file) & (Terraform local state file) & (Terraform backup of last state file)
+*.terraform/
+*.terraform.lock.hcl
+*.tfstate
+*.tfstate.*

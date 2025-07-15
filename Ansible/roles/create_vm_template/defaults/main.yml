@@ -1,0 +1,23 @@
+---
+# Default variables - adjust to your environment
+# Proxmox API connection
+
+# proxmox_api_host: ---> "is the IP address or hostname of your Proxmox server."
+# proxmox_api_host: "10.10.10.25" # EXAMPLE
+
+# proxmox_api_user:  ---> "Proxmox user with API access"
+# proxmox_api_user: "root@pam" # EXAMPLE 
+
+# proxmox_api_token_id:  ---> "API token ID (name) for authentication"
+# proxmox_api_token_id: "terraform"
+
+# proxmox_api_token_secret:  ---> "API token secret (key) for authentication"
+# proxmox_api_token_secret: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Cloud-init SSH key for user access
+# This is the public SSH key that will be injected into the cloned VM for user access.
+# cloudinit_ssh_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}" EXAMPLE
+
+# This is the VM template ID to clone from.
+# vm_template_id:  ---> "ID of the Proxmox VM template to clone"
+vm_template_id: 7000

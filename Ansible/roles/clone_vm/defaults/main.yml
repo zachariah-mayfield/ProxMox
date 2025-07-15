@@ -1,0 +1,48 @@
+---
+# Default variables - adjust to your environment
+# Proxmox API connection
+
+# proxmox_api_host: ---> "is the IP address or hostname of your Proxmox server."
+# proxmox_api_host: "10.10.10.25" # EXAMPLE
+
+# proxmox_api_user:  ---> "Proxmox user with API access"
+# proxmox_api_user: "root@pam" # EXAMPLE 
+
+# proxmox_api_token_id:  ---> "API token ID (name) for authentication"
+# proxmox_api_token_id: "terraform"
+
+# proxmox_api_token_secret:  ---> "API token secret (key) for authentication"
+# proxmox_api_token_secret: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Cloud-init SSH key for user access
+# This is the public SSH key that will be injected into the cloned VM for user access.
+# cloudinit_ssh_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}" EXAMPLE
+
+# Cloudinit_autologin:  ---> "Enable autologin for the user"
+cloudinit_autologin: true
+
+# This is the VM template ID to clone from.
+# vm_template_id:  ---> "ID of the Proxmox VM template to clone"
+vm_template_id: 7777
+
+# This is the ID for the new VM that will be created from the clone.
+# new_vm_id:  ---> "ID for the new cloned VM"
+new_vm_id: 7100
+
+# This is the name for the cloned VM.
+# vm_name:  ---> "Name for the cloned VM"
+vm_name: "clone-vm-7100"  # Name for the cloned VM
+
+# This is the Proxmox node where the VM will be created.
+# proxmox_node:  ---> "Proxmox node where the VM will be created
+custom_user_data_file: "user-data.yml"
+
+# This is the storage pool where the VM will be stored.
+# storage_pool:  ---> "Storage pool for the cloned VM"
+storage_name: "nvme_pool"      # Your ZFS or storage pool name
+
+# Cloud-Init user setup
+# Uncomment and set these variables to configure the user and root accounts in the cloned VM.
+# cloud_init_root: ""
+# cloud_init_user: ""
+# cloud_init_password: ""

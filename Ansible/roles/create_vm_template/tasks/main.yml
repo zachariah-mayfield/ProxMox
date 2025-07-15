@@ -1,0 +1,99 @@
+---
+# ssh_pubkey: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+- name: Create new cloud-init VM zm-ubuntu-template
+  ansible.builtin.command:
+    cmd: >
+      qm create 7000 
+      --name zm-ubuntu-template
+      --memory 8192
+      --cores 4
+      --cpu host
+      --net0 virtio,bridge=vmbr0
+      --scsihw virtio-scsi-pci
+      --serial0 socket
+      --vga serial0
+      --ciuser {{ cloud_init_user }}
+      --cipassword {{ cloud_init_password }}
+      --ipconfig0 ip=dhcp
+      --sshkey /root/.ssh/id_ed25519.pub
+      --agent enabled=1
+      --onboot 0
+  delegate_to: "192.168.1.250"
+
+# qm create 7000
+#   --name zm-ubuntu-template  ---> # Name of the VM/template.
+#   --memory 8192  ---> # RAM in MB.
+#   --cores 4  ---> # Number of CPU cores.
+#   --cpu host  ---> # CPU type to passthrough host CPU features.
+#   --net0 virtio,bridge=vmbr0  ---> # Network interface configuration.
+#   --scsihw virtio-scsi-pci  ---> # SCSI controller type.
+#   --serial0 socket  ---> # Serial console configuration.
+#   --vga serial0  ---> # VGA configuration.
+#   --ciuser "ubuntu"  ---> # Cloud-init user.
+#   --cipassword "ubuntu"  ---> # Cloud-init password (change to something secure or manage via Ansible Vault).
+#   --ipconfig0 ip=dhcp  ---> # Initial IP configuration for the VM (using DHCP).
+#   --sshkey /root/.ssh/id_ed25519.pub  ---> # Path to the SSH public key for cloud-init.
+#   --agent enabled=1  ---> # Enable/disable communication with the QEMU Guest Agent and its properties.
+#   --onboot 1  # Whether the VM should start automatically when the host boots.
+
+# Import an external disk image as an unused disk in a VM. The image format has to be supported by qemu-img(1).
+# The disk will be imported as a raw disk image, so it can be used with any VM.
+- name: Import Ubuntu cloud image as virtual disk
+  ansible.builtin.command:
+    cmd: >
+      qm importdisk {{ vm_template_id }} "/var/lib/vz/template/iso/jammy-server-cloudimg-amd64.img" "nvme_pool"
+  delegate_to: "192.168.1.250"
+
+# Attaches a virtual disk to the VM as the first SCSI drive (scsi0), pointing to a specific volume on a Proxmox storage pool.
+# scsi0 = the first disk attached via the SCSI controller.
+# nvme_pool = the name of the Proxmox storage (usually a ZFS or directory storage).
+# vm-{{ vm_template_id }}-disk-0 = the name of the actual disk file/image created earlier (usually by qm importdisk).
+- name: Attach imported disk to VM as "scsi0"
+  ansible.builtin.command:
+    cmd: >
+      qm set {{ vm_template_id }} --"scsi0" "nvme_pool":vm-{{ vm_template_id }}-disk-0
+  delegate_to: "192.168.1.250"
+
+# Resizes the disk attached to the VM (scsi0) to a specified size (50G in this case).
+# This is useful if the imported disk is smaller than desired or if you want to allocate more space for the VM.
+# You must resize the disk before converting the VM to a template.
+# qm resize <vmid> <disk> <size>
+# vm_template_id ---> the ID of the VM to resize.
+# "scsi0" ---> the disk device name to resize.
+# 50G ---> the new size of the disk.
+- name: Resize imported disk to {{ disk_size }}G
+  ansible.builtin.command:
+    cmd: >
+      qm resize {{ vm_template_id }} "scsi0" 50G
+  ignore_errors: true
+  delegate_to: "192.168.1.250"
+
+# Adds a cloud-init CD-ROM drive to the VM, allowing it to use cloud-init for configuration.
+# The cloud-init drive is used to provide user-data and meta-data for the VM during its initial boot.
+# qm set {{ vm_template_id }} ---> Modify the configuration of the VM with ID {{ vm_template_id }}
+# --ide2 ---> This tells Proxmox to attach something to the VM’s second IDE port (ide2 is the standard port used for Cloud-Init drives).
+# nvme_pool:cloudinit 
+# nvme_pool: ---> your Proxmox storage pool name.
+# cloudinit ---> special virtual volume that Proxmox automatically manages to inject cloud-init data (user-data, meta-data, SSH keys, IP config).
+# media=cdrom ---> Marks the disk as a CD-ROM, which is required for Cloud-Init to work properly (cloud-init expects a read-only ISO-style drive).
+- name: Add cloud-init CD-ROM drive
+  ansible.builtin.command:
+    cmd: >
+      qm set {{ vm_template_id }} --ide2 "nvme_pool":cloudinit,media=cdrom
+  delegate_to: "192.168.1.250"
+
+# qm set <VMID> ---> Modifies the VM's configuration in Proxmox.
+# --boot order=scsi0 ---> Tells Proxmox to boot first from the scsi0 disk, which is usually: 
+# Your imported cloud image (qcow2) The OS disk for the VM
+- name: Set boot order to boot from "scsi0"
+  ansible.builtin.command:
+    cmd: >
+      qm set {{ vm_template_id }} --boot order="scsi0"
+  delegate_to: "192.168.1.250"
+
+
+# Converts the Proxmox VM {{ vm_template_id }} into a template.
+- name: Convert the Proxmox VM {{ vm_template_id }} into a VM template.
+  ansible.builtin.command:
+    cmd: qm template {{ vm_template_id }}
+  delegate_to: "{{ proxmox_api_host }}"

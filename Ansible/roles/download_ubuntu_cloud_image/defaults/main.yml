@@ -1,0 +1,5 @@
+---
+cloud_image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+cloud_image_name: "jammy-server-cloudimg-amd64.img"
+cloud_image_storage: "nvme_pool"
+cloud_image_path: "/var/lib/vz/template/iso"
