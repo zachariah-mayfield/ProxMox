@@ -2,43 +2,51 @@ trigger:
   - main
 
 pool:
-  name: Default      # Your agent pool name
+  name: Default
   demands:
-    - agent.name -equals automation-9999  # Your agent's name (optional)
+    - agent.name -equals automation-9999
 
 variables:
-  TF_ROOT: './Terraform/bpg_terraform-clone-vm'  # Path to your Terraform code
+  TF_ROOT: './Terraform/bpg_terraform-clone-vm'
 
 stages:
   - stage: Terraform
     jobs:
       - job: terraform_plan_apply
         steps:
-          # 🔐 Download the secure tfvars file from Azure DevOps Library
           - task: DownloadSecureFile@1
             name: tfvarsFile
             inputs:
-              secureFile: secrets.auto.tfvars  # Must match the filename uploaded to the Library
+              secureFile: secrets.auto.tfvars
 
-          # 📦 Move it into the Terraform code directory
           - script: |
               echo "Moving tfvars file into Terraform folder..."
               mv "$(tfvarsFile.secureFilePath)" "$(TF_ROOT)/secrets.auto.tfvars"
             displayName: 'Move secrets.auto.tfvars to TF directory'
 
-          # 🔧 Terraform Init
+          # --- START SSH AGENT SETUP ---
+          - task: DownloadSecureFile@1
+            name: sshKeyFile
+            inputs:
+              secureFile: id_ed25519  # Your private SSH key uploaded as a secure file in Azure DevOps
+
+          - script: |
+              echo "Starting ssh-agent and adding SSH key..."
+              eval "$(ssh-agent -s)"
+              ssh-add "$(sshKeyFile.secureFilePath)"
+            displayName: 'Start ssh-agent and add private SSH key'
+          # --- END SSH AGENT SETUP ---
+
           - script: |
               echo "Initializing Terraform..."
               terraform -chdir=$(TF_ROOT) init
             displayName: 'Terraform Init'
 
-          # 📐 Terraform Plan using the tfvars file
           - script: |
               echo "Planning Terraform changes..."
               terraform -chdir=$(TF_ROOT) plan -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Plan'
 
-          # 🚀 Terraform Apply using the tfvars file
           - script: |
               echo "Applying Terraform changes..."
               terraform -chdir=$(TF_ROOT) apply -auto-approve -input=false -var-file="secrets.auto.tfvars"
