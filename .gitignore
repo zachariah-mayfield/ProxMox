@@ -1,5 +1,8 @@
 # .gitignore
 
+# Azure DevOps
+Azure_DevOps/PAT.txt
+
 # Environment specific file(s)
 *.env
 
