@@ -35,7 +35,7 @@ stages:
               secureFile: id_rsa_pem  # This must match the name of your uploaded PEM-format private key
 
           - script: |
-              echo "Starting ssh-agent..."
+              echo "Starting ssh-agent..." 
               echo "🔐 Showing private key snippet:"
               head -n 10 "$(sshKeyFile.secureFilePath)"
 
