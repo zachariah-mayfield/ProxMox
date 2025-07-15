@@ -35,6 +35,7 @@ stages:
           - script: |
               echo "Starting ssh-agent..."
               eval "$(ssh-agent -s)"
+              chmod 600 "$(sshKeyFile.secureFilePath)"
               ssh-add "$(sshKeyFile.secureFilePath)"
             displayName: 'Start ssh-agent and add SSH private key'
           # --- END SSH AGENT SETUP ---
