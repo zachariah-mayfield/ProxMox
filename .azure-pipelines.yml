@@ -15,7 +15,7 @@ stages:
       - job: terraform_plan_apply
         variables:
           # If you use a variable group for SSH_PRIVATE_KEY, reference it here:
-          # - group: YourVariableGroupName
+          - group: Private_Variables
         steps:
           - task: DownloadSecureFile@1
             name: tfvarsFile
