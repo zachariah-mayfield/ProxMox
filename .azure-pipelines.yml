@@ -7,24 +7,39 @@ pool:
     - agent.name -equals automation-9999  # Your agent's name (optional)
 
 variables:
-  TF_ROOT: './Terraform/bpg_terraform-clone-vm'
+  TF_ROOT: './Terraform/bpg_terraform-clone-vm'  # Path to your Terraform code
 
 stages:
   - stage: Terraform
     jobs:
       - job: terraform_plan_apply
         steps:
+          # 🔐 Download the secure tfvars file from Azure DevOps Library
+          - task: DownloadSecureFile@1
+            name: tfvarsFile
+            inputs:
+              secureFile: secrets.auto.tfvars  # Must match the filename uploaded to the Library
+
+          # 📦 Move it into the Terraform code directory
           - script: |
-              echo "Initializing Terraform"
+              echo "Moving tfvars file into Terraform folder..."
+              mv "$(tfvarsFile.secureFilePath)" "$(TF_ROOT)/secrets.auto.tfvars"
+            displayName: 'Move secrets.auto.tfvars to TF directory'
+
+          # 🔧 Terraform Init
+          - script: |
+              echo "Initializing Terraform..."
               terraform -chdir=$(TF_ROOT) init
             displayName: 'Terraform Init'
 
+          # 📐 Terraform Plan using the tfvars file
           - script: |
-              echo "Planning Terraform changes"
-              terraform -chdir=$(TF_ROOT) plan
+              echo "Planning Terraform changes..."
+              terraform -chdir=$(TF_ROOT) plan -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Plan'
 
+          # 🚀 Terraform Apply using the tfvars file
           - script: |
-              echo "Applying Terraform changes"
-              terraform -chdir=$(TF_ROOT) apply -auto-approve -input=false
+              echo "Applying Terraform changes..."
+              terraform -chdir=$(TF_ROOT) apply -auto-approve -input=false -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Apply'
