@@ -34,10 +34,20 @@ stages:
 
           - script: |
               echo "Starting ssh-agent..."
-              eval "$(ssh-agent -s)"
-              chmod 600 "$(sshKeyFile.secureFilePath)"
-              ssh-add "$(sshKeyFile.secureFilePath)"
-            displayName: 'Start ssh-agent and add SSH private key'
+              echo "Showing private key snippet:"
+              head -n 20 $(sshKeyFile.secureFilePath)
+
+              echo "Setting permissions:"
+              chmod 600 $(sshKeyFile.secureFilePath)
+              ls -l $(sshKeyFile.secureFilePath)
+
+              echo "Starting ssh-agent and adding key:"
+              eval $(ssh-agent -s)
+              ssh-add $(sshKeyFile.secureFilePath)
+
+              echo "Testing SSH connection:"
+              ssh -o StrictHostKeyChecking=no -i $(sshKeyFile.secureFilePath) root@192.168.1.250 echo "SSH connection successful"
+            displayName: 'Start ssh-agent and add SSH private key and DEBUG SSH connection' 
           # --- END SSH AGENT SETUP ---
 
           - script: |
