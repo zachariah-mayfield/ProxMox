@@ -144,7 +144,7 @@ variable vm_configs {
             cpu_cores    = 8
             disk_size    = 50
             #mac_address  = "AA:BB:CC:DD:77:77" # Optional MAC address, change if needed
-            #ip_address   = "192.168.1.240/24"
+            #ip_address   = "192.168.1.247/24"
             #gateway      = "192.168.1.254"
         }
         # "vm-8888" = {
@@ -182,7 +182,7 @@ variable vm_configs {
 # }
 
 # vm_ip_addresses = {
-#   "vm-7777" = "192.168.1.240/24"
+#   "vm-7777" = "192.168.1.247/24"
 #   "vm-8888" = "dhcp"
 # # "vm-9999" = "dhcp"  # Optional, can be omitted or set to "dhcp"
 # }
