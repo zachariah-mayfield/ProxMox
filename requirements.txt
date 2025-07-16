@@ -1,0 +1,8 @@
+# This file is part of the ProxMox project.
+# Below are the requirements for the ProxMox project.
+
+pytest
+testinfra
+paramiko
+
+

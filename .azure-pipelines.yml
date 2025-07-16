@@ -71,3 +71,16 @@ stages:
                 -var "ssh_private_key_path=$(sshKeyFile.secureFilePath)" \
                 -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Apply'
+
+          # --- Requirememts ---
+          - script: pip install -r requirements.txt
+            displayName: 'Install Python test dependencies'
+
+          # --- Tests - Test VM ---
+          - script: |
+              echo "🧪 Running Post-Deployment Tests..."
+              
+              ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
+
+              pytest Tests/test_ssh.py "$(sshKeyFile.secureFilePath)"
+            displayName: 'Run SSH pytest with Secure File'

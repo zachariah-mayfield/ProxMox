@@ -1,5 +1,8 @@
 # .gitignore
 
+# SSH File
+id_rsa_pem
+
 # Azure DevOps
 Azure_DevOps/PAT.txt
 
