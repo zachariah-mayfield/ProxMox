@@ -83,4 +83,4 @@ stages:
               ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
 
               pytest Tests/test_ssh.py "$(sshKeyFile.secureFilePath)"
-            displayName: 'Run SSH pytest with Secure File'
+            displayName: 'TEST: Run SSH pytest with Secure File'
