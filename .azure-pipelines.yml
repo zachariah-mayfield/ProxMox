@@ -93,6 +93,9 @@ stages:
               # Install test dependencies
               pip3 install pytest paramiko
 
+              # Add ~/.local/bin to PATH so pytest is found
+              export PATH=$HOME/.local/bin:$PATH
+
               # Run raw SSH test first
               ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
 
