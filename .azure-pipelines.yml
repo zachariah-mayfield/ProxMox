@@ -99,8 +99,8 @@ stages:
               # Move into the correct folder that contains your test and conftest.py
               cd "$(Build.SourcesDirectory)/Tests" || { echo "❌ Tests folder not found!"; exit 1; }
               echo "📂 Current dir: $(pwd)"
-              echo "📄 Test file:"
-              ls -l test_ssh.py
+              echo "📄 Test files:"
+              ls -la $(Build.SourcesDirectory)/Tests
 
               # Run raw SSH test first
               ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
