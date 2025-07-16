@@ -91,14 +91,17 @@ stages:
               which python3 || sudo apt update && sudo apt install -y python3 python3-pip
 
               # Install test dependencies
-              pip3 install pytest paramiko
+              pip3 install --user pytest paramiko
 
               # Add ~/.local/bin to PATH so pytest is found
               export PATH=$HOME/.local/bin:$PATH
+
+              # Change to the Tests directory
+              cd Tests
 
               # Run raw SSH test first
               ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
 
               # Run pytest with the secure key file
-              pytest Tests/test_ssh.py --ssh-key "$(sshKeyFile.secureFilePath)"
+              pytest test_ssh.py --ssh-key "$(sshKeyFile.secureFilePath)"
             displayName: 'TEST: Run SSH pytest with Secure File'
