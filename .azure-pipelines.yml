@@ -72,7 +72,8 @@ stages:
                 -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Apply'
 
-          # --- Tell Terraform to install and configure Python. ---
+          # --- Tell Terraform to install and configure Python. --- 
+          # A Microsoft-hosted runner uses this with UsePythonVersion@0 expects to find pre-installed versions of Python in a Microsoft tool cache.
           # - task: UsePythonVersion@0
           #   inputs:
           #     versionSpec: '3.x'
@@ -85,8 +86,16 @@ stages:
           # --- Tests - Test VM ---
           - script: |
               echo "🧪 Running Post-Deployment Tests..."
-              
+
+              # Install Python + pip if not installed
+              which python3 || sudo apt update && sudo apt install -y python3 python3-pip
+
+              # Install test dependencies
+              pip3 install pytest paramiko
+
+              # Run raw SSH test first
               ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
 
-              pytest Tests/test_ssh.py "$(sshKeyFile.secureFilePath)"
-            displayName: 'TEST: Run SSH pytest with Secure File' 
+              # Run pytest with the secure key file
+              pytest Tests/test_ssh.py --ssh-key "$(sshKeyFile.secureFilePath)"
+            displayName: 'TEST: Run SSH pytest with Secure File'
