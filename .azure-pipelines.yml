@@ -72,6 +72,12 @@ stages:
                 -var-file="secrets.auto.tfvars"
             displayName: 'Terraform Apply'
 
+          # --- Tell Terraform to install and configure Python. ---
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.x'
+            displayName: 'Set up Python 3'
+
           # --- Requirememts ---
           - script: pip install -r requirements.txt
             displayName: 'Install Python test dependencies'
