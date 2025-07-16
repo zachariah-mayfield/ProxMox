@@ -107,4 +107,4 @@ stages:
 
               # Run pytest with the secure key file
               pytest test_ssh.py --ssh-key "$(sshKeyFile.secureFilePath)"
-            displayName: 'TEST: Run SSH pytest with Secure File'
+            displayName: 'TEST: Run SSH pytest with Secure File' 
