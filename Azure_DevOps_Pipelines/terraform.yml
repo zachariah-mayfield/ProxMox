@@ -1,8 +1,8 @@
 # Define input parameters for this template
 parameters:
-  tfRoot: 'Terraform/bpg_terraform-clone-vm'  # e.g. 'Terraform/bpg_terraform-clone-vm' - the root directory for Terraform files
-  tfVarsFile: 'secrets.auto.tfvars'           # e.g. secrets.auto.tfvars - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
-  sshKeyFile: 'id_rsa_pem'                    # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  tfRoot: ''       # e.g. 'Terraform/bpg_terraform-clone-vm' - the root directory for Terraform files
+  tfVarsFile: ''   # e.g. secrets.auto.tfvars - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  sshKeyFile: ''   # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
 
 # Define a job(s) that will run on the Azure DevOps agent
 jobs:
