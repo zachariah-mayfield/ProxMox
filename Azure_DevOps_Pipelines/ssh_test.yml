@@ -1,0 +1,47 @@
+# Define input parameters for this template
+parameters:
+  sshKeyFile: ''  # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  testUser: ''    # e.g. 'ubuntu' - Change to your VM user if not 'ubuntu'
+
+jobs:
+  - job: SSH_Connectivity
+    displayName: "🔐 SSH Connectivity Test"
+    dependsOn: Terraform_BPG_Provider_Clone_VM  # This stage depends on the Terraform stage
+    pool:
+      name: Default
+      demands:
+        - agent.name -equals automation-9999
+
+    steps:
+      # Download SSH key again
+      - task: DownloadSecureFile@1
+        name: sshKeyFile
+        inputs:
+          secureFile: ${{ parameters.sshKeyFile }}
+
+      # Secure the key and start agent
+      - script: |
+          chmod 600 "$(sshKeyFile.secureFilePath)"
+          eval "$(ssh-agent -s)"
+          ssh-add "$(sshKeyFile.secureFilePath)"
+        displayName: "Setup SSH Key"
+
+      # Download Terraform output artifact
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          artifact: terraform_outputs
+          path: $(Pipeline.Workspace)/terraform_outputs
+        displayName: "Download Terraform Output Artifact"
+
+      # Extract IPs from JSON and SSH into each
+      - script: |
+          echo "Parsing IPs and checking SSH access..."
+
+          output_file="$(Pipeline.Workspace)/terraform_outputs/tf_output.json"
+          vm_ips=$(jq -r '.vm_ips.value[] | .[]' "$output_file")
+
+          for ip in $vm_ips; do
+            echo "Testing SSH to $ip..."
+            ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" ${{ parameters.testUser }}@$ip "echo ✅ SSH OK for $ip" || echo ❌ Failed to SSH to $ip
+          done
+        displayName: "Test SSH Access to All VMs"
