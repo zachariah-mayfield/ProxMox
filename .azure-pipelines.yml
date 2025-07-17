@@ -19,4 +19,4 @@ stages:
           tfRoot: 'Terraform/bpg_terraform-clone-vm'  # e.g. 'Terraform/bpg_terraform-clone-vm' - the root directory for Terraform files
           tfVarsFile: 'secrets.auto.tfvars'           # e.g. secrets.auto.tfvars - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
           sshKeyFile: 'id_rsa_pem'                    # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
-          # varGroup: 'Private_Variables'  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
+          varGroup: 'Private_Variables'  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'

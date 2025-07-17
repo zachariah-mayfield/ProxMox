@@ -15,9 +15,10 @@ jobs:
         - agent.name -equals automation-9999  # Ensure it runs only on the agent named "automation-9999"
 
     # Define the variables for this job
-    # variables:
-    #   - group: ${{ parameters.varGroup }}  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
+    variables:
+      - group: ${{ parameters.varGroup }}  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
 
+    # Define the steps that will run in this job
     steps:
       # Download the secrets.auto.tfvars file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
       - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
