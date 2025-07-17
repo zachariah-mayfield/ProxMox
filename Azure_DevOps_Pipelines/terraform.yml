@@ -15,8 +15,8 @@ jobs:
         - agent.name -equals automation-9999  # Ensure it runs only on the agent named "automation-9999"
 
     # Define the variables for this job
-    variables:
-      - group: ${{ parameters.varGroup }}  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
+    # variables:
+    #   - group: ${{ parameters.varGroup }}  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
 
     # Define the steps that will run in this job
     steps:
