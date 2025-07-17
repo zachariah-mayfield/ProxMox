@@ -33,6 +33,7 @@ jobs:
         displayName: "Download Terraform Output Artifact"
 
       # Extract IPs from JSON and SSH into each
+      # Make sure jq is installed on the agent
       - script: |
           echo "Parsing IPs and checking SSH access..."
 
