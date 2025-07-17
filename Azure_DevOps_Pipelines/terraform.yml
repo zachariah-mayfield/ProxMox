@@ -35,7 +35,7 @@ jobs:
       - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
         name: sshKeyFile  # Name of this task so we can reference it later
         inputs:  # Inputs for the task
-          secureFile: ${{ parameters.tfVarsFile }}  # This is the name of your uploaded **private** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
+          secureFile: ${{ parameters.sshKeyFile }}  # This is the name of your uploaded **private** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
 
       # Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)
       - script: |
