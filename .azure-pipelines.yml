@@ -26,7 +26,7 @@ stages:
     displayName: "Test SSH Connection"  # Display name for the stage in Azure DevOps UI
     dependsOn: Terraform_BPG_Provider_Clone_VM  # This stage depends on the Terraform stage
     jobs:  # Define the jobs within this stage
-      - template: Azure_DevOps_Pipelines/ssh_test.yml  # Use the ssh_test.yml template for the job
+      - template: Azure_DevOps_Pipelines/ssh_test.yml  # Use the ssh_test.yml template for the job.
         parameters:  # Parameters for the SSH test job
           sshKeyFile: 'id_rsa_pem'  # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
           testUser: 'ubuntu'  # e.g. 'ubuntu' - the user to test SSH connection with

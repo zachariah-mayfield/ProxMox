@@ -6,7 +6,6 @@ parameters:
 jobs:
   - job: SSH_Connectivity
     displayName: "🔐 SSH Connectivity Test"
-    dependsOn: Terraform_BPG_Provider_Clone_VM  # This stage depends on the Terraform stage
     pool:
       name: Default
       demands:
