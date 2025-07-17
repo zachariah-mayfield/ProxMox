@@ -1,0 +1,89 @@
+# Define input parameters for this template
+parameters:
+  tfRoot: 'Terraform/bpg_terraform-clone-vm'  # e.g. 'Terraform/bpg_terraform-clone-vm' - the root directory for Terraform files
+  tfVarsFile: 'secrets.auto.tfvars'           # e.g. secrets.auto.tfvars - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  sshKeyFile: 'id_rsa_pem'                    # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+
+# Define a job(s) that will run on the Azure DevOps agent
+jobs:
+  - job: Terraform  # Unique name for the job
+    displayName: "Terraform Plan & Apply"  # Displayed in the Azure DevOps UI
+    # Define which agent pool this job should run on
+    pool:
+      name: Default  # Use the agent pool named "Default"
+      demands:
+        - agent.name -equals automation-9999  # Ensure it runs only on the agent named "automation-9999"
+
+    # Define the variables for this job
+    # variables:
+    #   - group: ${{ parameters.varGroup }}  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
+
+    steps:
+      # Download the secrets.auto.tfvars file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+      - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
+        name: tfvarsFile  # Name of this task so we can reference it later
+        inputs:  # Inputs for the task
+          secureFile: ${{ parameters.tfVarsFile }}
+      # Move the secrets.auto.tfvars file to the Terraform root directory 'Terraform/bpg_terraform-clone-vm'
+      - script: |
+          echo "📦 Moving tfvars into Terraform directory..."
+          mv "$(tfvarsFile.secureFilePath)" "${{ parameters.tfRoot }}/secrets.auto.tfvars"
+        displayName: 'Move the secrets.auto.tfvars file to the Terraform root directory Terraform/bpg_terraform-clone-vm'
+
+      # Download SSH key for Terraform use
+      - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
+        name: sshKeyFile  # Name of this task so we can reference it later
+        inputs:  # Inputs for the task
+          secureFile: ${{ parameters.tfVarsFile }}  # This is the name of your uploaded **private** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
+
+      # Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)
+      - script: |
+          echo "🔐 Showing private key snippet:"
+          head -n 10 "$(sshKeyFile.secureFilePath)"
+
+          echo "🔒 Setting permissions..."
+          chmod 600 "$(sshKeyFile.secureFilePath)"
+
+          echo "🔑 Starting ssh-agent and adding key..."
+          eval "$(ssh-agent -s)"
+          ssh-add "$(sshKeyFile.secureFilePath)"
+
+          echo "🧪 Testing SSH connection to Proxmox..."
+          ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
+        displayName: 'Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)'
+
+      # Terraform Init
+      - script: |
+          echo "🚀 Running terraform init..."
+          terraform -chdir=${{ parameters.tfRoot }} init
+        displayName: 'Terraform Init'
+
+      # Terraform Plan
+      - script: |
+          echo "🔍 Running terraform plan..."
+          terraform -chdir=${{ parameters.tfRoot }} plan \
+            -var "ssh_private_key_path=$(sshKeyFile.secureFilePath)" \
+            -var-file="secrets.auto.tfvars"
+        displayName: 'Terraform Plan'
+
+      # Terraform Apply
+      - script: |
+          echo "⚙️ Running terraform apply..."
+          terraform -chdir=${{ parameters.tfRoot }} apply \
+            -auto-approve -input=false \
+            -var "ssh_private_key_path=$(sshKeyFile.secureFilePath)" \
+            -var-file="secrets.auto.tfvars"
+        displayName: 'Terraform Apply'
+
+      # Capture Terraform Output - This step captures the output of the Terraform apply command and saves it to a JSON file
+      - script: |
+          echo "Capturing terraform output to JSON..."
+          terraform -chdir=${{ parameters.tfRoot }} output -json > ${{ parameters.tfRoot }}/tf_output.json
+          cat ${{ parameters.tfRoot }}/tf_output.json
+        displayName: 'Generate Terraform output JSON'
+        name: Output  # Name this step so we can reference it later
+
+      # Publish Output as Artifact - This step publishes the generated tf_output.json file as an artifact in Azure DevOps
+      - publish: ${{ parameters.tfRoot }}/tf_output.json  # Publish the generated tf_output.json file as an artifact
+        artifact: terraform_outputs  # Name of the artifact
+        displayName: 'Publish terraform_outputs artifact'  # Display name in the Azure DevOps UI

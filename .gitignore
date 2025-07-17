@@ -1,10 +1,13 @@
 # .gitignore
 
 # SSH File
-id_rsa_pem
+*/id_rsa_pem
 
 # Azure DevOps
-Azure_DevOps/PAT.txt
+*/PAT.txt
+
+# Old Files
+Old_Files/*
 
 # Environment specific file(s)
 *.env
