@@ -18,7 +18,7 @@ stages:
         parameters:  # Parameters for the terraform job
           tfRoot: 'Terraform/bpg_terraform-clone-vm'  # e.g. 'Terraform/bpg_terraform-clone-vm' - the root directory for Terraform files
           tfVarsFile: 'secrets.auto.tfvars'           # e.g. secrets.auto.tfvars - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
-          sshKeyFile: 'id_rsa_pem'                    # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+          sshKeyFile: 'id_ed25519'                    # e.g. id_ed25519 - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
           # varGroup: 'Private_Variables'  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
 
   # Stage for testing SSH connection
@@ -28,5 +28,5 @@ stages:
     jobs:  # Define the jobs within this stage
       - template: Azure_DevOps_Pipelines/ssh_test.yml  # Use the ssh_test.yml template for the job.
         parameters:  # Parameters for the SSH test job
-          sshKeyFile: 'id_rsa_pem'  # e.g. id_rsa_pem - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+          sshKeyFile: 'id_ed25519'  # e.g. id_ed25519 - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
           testUser: 'ubuntu'  # e.g. 'ubuntu' - the user to test SSH connection with

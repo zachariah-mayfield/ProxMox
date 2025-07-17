@@ -6,6 +6,9 @@
 # Azure DevOps
 */PAT.txt
 
+# Secret Files
+X_Secret/*
+
 # Old Files
 Old_Files/*
 
