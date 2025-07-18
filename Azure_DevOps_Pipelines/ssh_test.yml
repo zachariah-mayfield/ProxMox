@@ -1,7 +1,9 @@
 # Define input parameters for this template
 parameters:
-  sshKeyFile: ''  # e.g. id_ed25519 - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
-  testUser: ''    # e.g. 'ubuntu' - Change to your VM user if not 'ubuntu'
+  sshKeyFile: ''            # e.g. id_ed25519 - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  testUser: ''              # e.g. 'ubuntu' - Change to your VM user if not 'ubuntu'
+  ssh_private_key_path: ''  # e.g. id_ed25519 - this is the Private SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  ssh_public_key_path: ''   # e.g. id_ed25519.pub - this is the Public SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
 
 jobs:
   - job: SSH_Connectivity
@@ -10,40 +12,56 @@ jobs:
       name: Default
       demands:
         - agent.name -equals automation-9999
-
+    
     steps:
-      # Download SSH key again
+
+      # ── Download PRIVATE key ──────────────────────────────────────────────────
       - task: DownloadSecureFile@1
-        name: sshKeyFile
+        name: downloadPrivateKey
         inputs:
-          secureFile: ${{ parameters.sshKeyFile }}
+          secureFile: ${{ parameters.ssh_private_key_path }} # e.g. id_ed25519 - this is the Private SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
 
-      # Secure the key and start agent
+      # ── Download PUBLIC key (matching .pub) ───────────────────────────────────
+      - task: DownloadSecureFile@1
+        name: downloadPublicKey
+        inputs:
+          secureFile: ${{ parameters.ssh_public_key_path }}  # e.g. id_ed25519.pub - this is the Public SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+
+      # ── Prepare keys & start ssh-agent ────────────────────────────────────────
       - script: |
-          chmod 600 "$(sshKeyFile.secureFilePath)"
-          eval "$(ssh-agent -s)"
-          ssh-add "$(sshKeyFile.secureFilePath)"
-        displayName: "Setup SSH Key"
+          set -e
+          # Copy keys to the explicit paths passed in
+          cp "$(downloadPrivateKey.secureFilePath)" "${{ parameters.ssh_private_key_path }}"
+          cp "$(downloadPublicKey.secureFilePath)" "${{ parameters.ssh_public_key_path }}"
+          chmod 600 "${{ parameters.ssh_private_key_path }}"
 
-      # Download Terraform output artifact
+          eval "$(ssh-agent -s)"
+          ssh-add "${{ parameters.ssh_private_key_path }}"
+        displayName: "Setup SSH Keys and start ssh-agent"
+
+      # ── Download Terraform outputs (vm_ips) ───────────────────────────────────
       - task: DownloadPipelineArtifact@2
         inputs:
           artifact: terraform_outputs
           path: $(Pipeline.Workspace)/terraform_outputs
         displayName: "Download Terraform Output Artifact"
 
+      # ── Loop through IPs & test SSH ───────────────────────────────────────────
       # Extract IPs from JSON and SSH into each
       # Make sure jq is installed on the agent
       - script: |
+          set -e
           echo "Parsing IPs and checking SSH access..."
 
           output_file="$(Pipeline.Workspace)/terraform_outputs/tf_output.json"
           vm_ips=$(jq -r '.vm_ips.value[] | .[]' "$output_file")
           
-          ssh-keygen -R 192.168.1.247 || true
-
           for ip in $vm_ips; do
-            echo "Testing SSH to $ip..."
-            ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" ${{ parameters.testUser }}@$ip "echo ✅ SSH OK for $ip" || echo ❌ Failed to SSH to $ip
+              echo "Testing SSH to $ip..."
+              ssh-keygen -R "$ip" || true
+              ssh -o StrictHostKeyChecking=no \
+                  -i "${{ parameters.ssh_private_key_path }}" \
+                  ${{ parameters.testUser }}@"$ip" 'echo ✅ SSH OK' \
+              || echo "❌ Failed to SSH to $ip"
           done
         displayName: "Test SSH Access to All VMs"

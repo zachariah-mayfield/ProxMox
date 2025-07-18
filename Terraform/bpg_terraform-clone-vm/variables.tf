@@ -94,13 +94,13 @@ variable "storage_pool_cloudinit" {
   default     = "local"
 }
 
-variable "ssh_key_path" {
-  description = "ssh key path"
+variable "ssh_public_key_path" {
+  description = "e.g. id_ed25519.pub - this is the Public SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files"
   type        = string
 }
 
 variable "ssh_private_key_path" {
-  description = "Path to the SSH private key for Proxmox access - This will be set in the Azure DevOps pipeline as a variable."
+  description = "# e.g. id_ed25519 - this is the Private SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files"
   type        = string
 }
 

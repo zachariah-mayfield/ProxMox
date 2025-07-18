@@ -32,7 +32,7 @@ locals {
       cloud_init_user     = var.cloud_init_user
       cloud_init_root     = "root"
       cloud_init_password = bcrypt(var.cloud_init_password)
-      cloudinit_ssh_key   = trimspace(file(var.ssh_key_path))
+      cloudinit_ssh_key   = trimspace(file(var.ssh_public_key_path))
       cloudinit_autologin = true
     })
   }
@@ -145,7 +145,7 @@ resource "proxmox_virtual_environment_vm" "clone_vm" {
     user_account {
       username = var.cloud_init_user
       password = bcrypt(var.cloud_init_password)
-      keys     = [trimspace(file(var.ssh_key_path))]
+      keys     = [trimspace(file(var.ssh_public_key_path))]
     }
   }
 }

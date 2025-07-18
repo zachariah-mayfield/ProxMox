@@ -1,8 +1,8 @@
 # Define input parameters for this template
 parameters:
-  tfRoot: ''       # e.g. 'Terraform/bpg_terraform-clone-vm' - the root directory for Terraform files
-  tfVarsFile: ''   # e.g. secrets.auto.tfvars - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
-  sshKeyFile: ''   # e.g. id_ed25519 - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  tfRoot: ''                # e.g. 'Terraform/bpg_terraform-clone-vm' - the root directory for Terraform files
+  tfVarsFile: ''            # e.g. secrets.auto.tfvars - file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
+  ssh_private_key_path: ''  # e.g. id_ed25519 - this is the Private SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
 
 # Define a job(s) that will run on the Azure DevOps agent
 jobs:
@@ -31,26 +31,26 @@ jobs:
           mv "$(tfvarsFile.secureFilePath)" "${{ parameters.tfRoot }}/secrets.auto.tfvars"
         displayName: 'Move the secrets.auto.tfvars file to the Terraform root directory Terraform/bpg_terraform-clone-vm'
 
-      # Download SSH key for Terraform use
+      # ── Download PRIVATE key ──────────────────────────────────────────────────
       - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
-        name: sshKeyFile  # Name of this task so we can reference it later
+        name: downloadPrivateKey  # Name of this task so we can reference it later
         inputs:  # Inputs for the task
-          secureFile: ${{ parameters.sshKeyFile }}  # This is the name of your uploaded **private** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
+          secureFile: ${{ parameters.ssh_private_key_path }}  # This is the name of your uploaded **private** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
 
       # Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)
       - script: |
           echo "🔐 Showing private key snippet:"
-          head -n 10 "$(sshKeyFile.secureFilePath)"
+          head -n 10 "${{ parameters.ssh_private_key_path }}"
 
           echo "🔒 Setting permissions..."
-          chmod 600 "$(sshKeyFile.secureFilePath)"
+          chmod 600 "${{ parameters.ssh_private_key_path }}"
 
           echo "🔑 Starting ssh-agent and adding key..."
           eval "$(ssh-agent -s)"
-          ssh-add "$(sshKeyFile.secureFilePath)"
+          ssh-add "${{ parameters.ssh_private_key_path }}"
 
           echo "🧪 Testing SSH connection to Proxmox..."
-          ssh -o StrictHostKeyChecking=no -i "$(sshKeyFile.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
+          ssh -o StrictHostKeyChecking=no -i "${{ parameters.ssh_private_key_path }}" root@192.168.1.250 "echo ✅ SSH connection successful"
         displayName: 'Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)'
 
       # Terraform Init
@@ -63,7 +63,7 @@ jobs:
       - script: |
           echo "🔍 Running terraform plan..."
           terraform -chdir=${{ parameters.tfRoot }} plan \
-            -var "ssh_private_key_path=$(sshKeyFile.secureFilePath)" \
+            -var "ssh_private_key_path=${{ parameters.ssh_private_key_path }}" \
             -var-file="secrets.auto.tfvars"
         displayName: 'Terraform Plan'
 
@@ -72,7 +72,7 @@ jobs:
           echo "⚙️ Running terraform apply..."
           terraform -chdir=${{ parameters.tfRoot }} apply \
             -auto-approve -input=false \
-            -var "ssh_private_key_path=$(sshKeyFile.secureFilePath)" \
+            -var "ssh_private_key_path=${{ parameters.ssh_private_key_path }}" \
             -var-file="secrets.auto.tfvars"
         displayName: 'Terraform Apply'
 
