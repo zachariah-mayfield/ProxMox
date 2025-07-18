@@ -32,7 +32,10 @@ jobs:
           set -e
 
           echo "🔐 Showing private key snippet:"
-          head -n 5 "$(downloadPrivateKey.secureFilePath)" || true
+          head -n 10 "$(downloadPrivateKey.secureFilePath)" || true
+
+          ls -la ~/.ssh/"${{ parameters.ssh_private_key_path }}"
+          ls -la ~/.ssh/"${{ parameters.ssh_public_key_path }}"
 
           echo "🔒 Copying keys and setting permissions..."
           cp "$(downloadPrivateKey.secureFilePath)" ~/.ssh/"${{ parameters.ssh_private_key_path }}"
