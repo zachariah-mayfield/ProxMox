@@ -31,8 +31,8 @@ jobs:
       - script: |
           set -e
           # Copy keys to the explicit paths passed in
-          cp "$(downloadPrivateKey.secureFilePath)" "${{ parameters.ssh_private_key_path }}"
-          cp "$(downloadPublicKey.secureFilePath)" "${{ parameters.ssh_public_key_path }}"
+          # cp "$(downloadPrivateKey.secureFilePath)" "${{ parameters.ssh_private_key_path }}"
+          # cp "$(downloadPublicKey.secureFilePath)" "${{ parameters.ssh_public_key_path }}"
           chmod 600 "${{ parameters.ssh_private_key_path }}"
 
           eval "$(ssh-agent -s)"
