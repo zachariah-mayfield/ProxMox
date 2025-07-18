@@ -35,16 +35,18 @@ jobs:
           head -n 5 "$(downloadPrivateKey.secureFilePath)" || true
 
           echo "🔒 Copying keys and setting permissions..."
-          cp "$(downloadPrivateKey.secureFilePath)" "${{ parameters.ssh_private_key_path }}"
-          cp "$(downloadPublicKey.secureFilePath)" "${{ parameters.ssh_public_key_path }}"
-          chmod 600 "${{ parameters.ssh_private_key_path }}"
-
+          cp "$(downloadPrivateKey.secureFilePath)" ~/.ssh/"${{ parameters.ssh_private_key_path }}"
+          cp "$(downloadPublicKey.secureFilePath)" ~/.ssh/"${{ parameters.ssh_public_key_path }}"
+          
+          chmod 600 ~/.ssh/"${{ parameters.ssh_private_key_path }}"
+          chmod 644 ~/.ssh/"${{ parameters.ssh_public_key_path }}"
+          
           echo "🔑 Starting ssh-agent and adding key..."
           eval "$(ssh-agent -s)"
-          ssh-add "${{ parameters.ssh_private_key_path }}"
+          ssh-add ~/.ssh/"${{ parameters.ssh_private_key_path }}"
 
           echo "🧪 Testing SSH connection to Proxmox..."
-          ssh -o StrictHostKeyChecking=no -i "${{ parameters.ssh_private_key_path }}" root@192.168.1.250 'echo ✅ SSH OK'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/"${{ parameters.ssh_private_key_path }}" root@192.168.1.250 'echo ✅ SSH OK'
         displayName: "Setup SSH Keys and start ssh-agent"
 
       # ── Download Terraform outputs (vm_ips) ───────────────────────────────────
@@ -68,7 +70,7 @@ jobs:
               echo "Testing SSH to $ip..."
               ssh-keygen -R "$ip" || true
               ssh -o StrictHostKeyChecking=no \
-                  -i "${{ parameters.ssh_private_key_path }}" \
+                  -i ~/.ssh/"${{ parameters.ssh_private_key_path }}" \
                   ${{ parameters.testUser }}@"$ip" 'echo ✅ SSH OK' \
               || echo "❌ Failed to SSH to $ip"
           done
