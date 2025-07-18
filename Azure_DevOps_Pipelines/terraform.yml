@@ -97,7 +97,7 @@ jobs:
             -var="ssh_private_key_path=$(downloadPrivateKey.secureFilePath)" \
             -var="ssh_public_key_path=$(downloadPublicKey.secureFilePath)" \
             -var-file="secrets.auto.tfvars"
-        displayName: 'Terraform Apply'
+        displayName: 'Terraform Apply' 
 
       # Capture Terraform Output - This step captures the output of the Terraform apply command and saves it to a JSON file
       - script: |
