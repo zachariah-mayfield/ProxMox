@@ -30,13 +30,21 @@ jobs:
       # ── Prepare keys & start ssh-agent ────────────────────────────────────────
       - script: |
           set -e
-          # Copy keys to the explicit paths passed in
-          # cp "$(downloadPrivateKey.secureFilePath)" "${{ parameters.ssh_private_key_path }}"
-          # cp "$(downloadPublicKey.secureFilePath)" "${{ parameters.ssh_public_key_path }}"
+
+          echo "🔐 Showing private key snippet:"
+          head -n 5 "$(downloadPrivateKey.secureFilePath)" || true
+
+          echo "🔒 Copying keys and setting permissions..."
+          cp "$(downloadPrivateKey.secureFilePath)" "${{ parameters.ssh_private_key_path }}"
+          cp "$(downloadPublicKey.secureFilePath)" "${{ parameters.ssh_public_key_path }}"
           chmod 600 "${{ parameters.ssh_private_key_path }}"
 
+          echo "🔑 Starting ssh-agent and adding key..."
           eval "$(ssh-agent -s)"
           ssh-add "${{ parameters.ssh_private_key_path }}"
+
+          echo "🧪 Testing SSH connection to Proxmox..."
+          ssh -o StrictHostKeyChecking=no -i "${{ parameters.ssh_private_key_path }}" root@192.168.1.250 'echo ✅ SSH OK'
         displayName: "Setup SSH Keys and start ssh-agent"
 
       # ── Download Terraform outputs (vm_ips) ───────────────────────────────────
