@@ -111,3 +111,38 @@ jobs:
       - publish: ${{ parameters.tfRoot }}/tf_output.json  # Publish the generated tf_output.json file as an artifact
         artifact: terraform_outputs  # Name of the artifact
         displayName: 'Publish terraform_outputs artifact'  # Display name in the Azure DevOps UI
+
+#############################################################################################################
+########### --------------         Explanation of the Code below                   -------------- ###########
+#############################################################################################################
+# Azure DevOps YAML: Compile-time vs Runtime variablesAzure DevOps YAML: Compile-time vs Runtime variables
+
+# There are two classes of variables in YAML pipelines:
+# Type -> Syntax -> When It is Resolved -> Example 
+# Parameters -> ${{ parameters.xyz }} -> At compile-time (before execution) -> ${{ parameters.tfRoot }}
+# Runtime Variables -> $(xyz) -> At runtime (during execution) -> $(downloadPrivateKey.secureFilePath)
+
+# What ${{ parameters.ssh_private_key_path }} actually contains
+# parameters:
+#   ssh_private_key_path: 'id_ed25519'
+# Then this expression:
+# -var="ssh_private_key_path=${{ parameters.ssh_private_key_path }}"
+# Becomes:
+# -var="ssh_private_key_path=id_ed25519"
+
+# What $(downloadPrivateKey.secureFilePath) gives you
+# When you use the DownloadSecureFile@1 task:
+# - task: DownloadSecureFile@1
+#   name: downloadPrivateKey
+#   inputs:
+#     secureFile: ${{ parameters.ssh_private_key_path }}
+
+# It downloads id_ed25519 to a secure, temporary path like:
+# /home/USER-NAME/azure-devops-agent/_work/_temp/<uuid>.id_ed25519
+# And then sets the environment variable:
+# $(downloadPrivateKey.secureFilePath)
+# So when you write:
+# -var="ssh_private_key_path=$(downloadPrivateKey.secureFilePath)"
+# It becomes something like:
+# -var="ssh_private_key_path=/home/ubuntu/azure-devops-agent/_work/_temp/123abc.id_ed25519"
+#############################################################################################################
