@@ -25,6 +25,19 @@ jobs:
         name: tfvarsFile  # Name of this task so we can reference it later
         inputs:  # Inputs for the task
           secureFile: ${{ parameters.tfVarsFile }}
+
+      # ── Download PRIVATE key ──────────────────────────────────────────────────
+      - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
+        name: downloadPrivateKey  # Name of this task so we can reference it later
+        inputs:  # Inputs for the task
+          secureFile: ${{ parameters.ssh_private_key_path }}  # This is the name of your uploaded **private** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
+      
+      # ── Download PUBLIC key ───────────────────────────────────────────────────
+      - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
+        name: downloadPublicKey  # Name of this task so we can reference it later
+        inputs:  # Inputs for the task
+          secureFile: ${{ parameters.ssh_public_key_path }}  # This is the name of your uploaded **public** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
+
       # Move the secrets.auto.tfvars file to the Terraform root directory 'Terraform/bpg_terraform-clone-vm'
       - script: |
           echo "📦 Moving tfvars into Terraform directory..."
@@ -44,12 +57,6 @@ jobs:
           mv "$(downloadPrivateKey.secureFilePath)" "${{ parameters.tfRoot }}/${{ parameters.ssh_private_key_path }}"
           chmod 600 "${{ parameters.tfRoot }}/${{ parameters.ssh_private_key_path }}"
         displayName: 'Move the SSH private key file to the Terraform root directory Terraform/bpg_terraform-clone-vm'
-
-      # ── Download PRIVATE key ──────────────────────────────────────────────────
-      - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
-        name: downloadPrivateKey  # Name of this task so we can reference it later
-        inputs:  # Inputs for the task
-          secureFile: ${{ parameters.ssh_private_key_path }}  # This is the name of your uploaded **private** ssh key in Azure DevOps --> Pipelines --> Library --> Secure Files
 
       # Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)
       - script: |
