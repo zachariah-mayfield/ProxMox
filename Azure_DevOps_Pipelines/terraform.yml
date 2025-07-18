@@ -94,8 +94,8 @@ jobs:
           echo "⚙️ Running terraform apply..."
           terraform -chdir=${{ parameters.tfRoot }} apply \
             -auto-approve \
-            -var="ssh_public_key_path=${{ parameters.ssh_public_key_path }}" \
-            -var="ssh_private_key_path=${{ parameters.ssh_private_key_path }}" \
+            -var="ssh_private_key_path=$(downloadPrivateKey.secureFilePath)" \
+            -var="ssh_public_key_path=$(downloadPublicKey.secureFilePath)" \
             -var-file="secrets.auto.tfvars"
         displayName: 'Terraform Apply'
 
