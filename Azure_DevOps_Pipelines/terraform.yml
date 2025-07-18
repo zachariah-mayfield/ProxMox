@@ -31,6 +31,20 @@ jobs:
           mv "$(tfvarsFile.secureFilePath)" "${{ parameters.tfRoot }}/secrets.auto.tfvars"
         displayName: 'Move the secrets.auto.tfvars file to the Terraform root directory Terraform/bpg_terraform-clone-vm'
 
+      # Move the SSH public key file to the Terraform root directory 'Terraform/bpg_terraform-clone-vm'
+      - script: |
+          echo "📦 Moving SSH public key into Terraform directory... "
+          mv "$(downloadPublicKey.secureFilePath)" "${{ parameters.tfRoot }}/${{ parameters.ssh_public_key_path }}"
+          chmod 644 "${{ parameters.tfRoot }}/${{ parameters.ssh_public_key_path }}"
+        displayName: 'Move the SSH public key file to the Terraform root directory Terraform/bpg_terraform-clone-vm'
+
+      # Move the SSH private key file to the Terraform root directory 'Terraform/bpg_terraform-clone-vm'
+      - script: |
+          echo "📦 Moving SSH private key into Terraform directory... "
+          mv "$(downloadPrivateKey.secureFilePath)" "${{ parameters.tfRoot }}/${{ parameters.ssh_private_key_path }}"
+          chmod 600 "${{ parameters.tfRoot }}/${{ parameters.ssh_private_key_path }}"
+        displayName: 'Move the SSH private key file to the Terraform root directory Terraform/bpg_terraform-clone-vm'
+
       # ── Download PRIVATE key ──────────────────────────────────────────────────
       - task: DownloadSecureFile@1  # This is a Azure DevOps built-in task to download a file from Azure DevOps --> Pipelines --> Library --> Secure Files
         name: downloadPrivateKey  # Name of this task so we can reference it later
@@ -63,17 +77,18 @@ jobs:
       - script: |
           echo "🔍 Running terraform plan..."
           terraform -chdir=${{ parameters.tfRoot }} plan \
-            -var "ssh_private_key_path=$(downloadPrivateKey.secureFilePath)" \
-            -var "ssh_public_key_path=${{ parameters.ssh_public_key_path }}" \
+            -var="ssh_public_key_path=${{ parameters.ssh_public_key_path }}" \
+            -var="ssh_private_key_path=${{ parameters.ssh_private_key_path }}" \
             -var-file="secrets.auto.tfvars"
         displayName: 'Terraform Plan'
 
       # Terraform Apply
       - script: |
           echo "⚙️ Running terraform apply..."
-          terraform -chdir=$(parameters.tfRoot) apply \
-            -auto-approve -input=false \
-            -var "ssh_private_key_path=$(downloadPrivateKey.secureFilePath)" \
+          terraform -chdir=${{ parameters.tfRoot }} apply \
+            -auto-approve \
+            -var="ssh_public_key_path=${{ parameters.ssh_public_key_path }}" \
+            -var="ssh_private_key_path=${{ parameters.ssh_private_key_path }}" \
             -var-file="secrets.auto.tfvars"
         displayName: 'Terraform Apply'
 
