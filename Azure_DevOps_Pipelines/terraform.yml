@@ -62,15 +62,17 @@ jobs:
       # Terraform Plan
       - script: |
           echo "🔍 Running terraform plan..."
-          terraform -chdir=${{ parameters.tfRoot }} plan \
+          terraform -chdir=$(TF_ROOT) plan \
             -var "ssh_private_key_path=$(downloadPrivateKey.secureFilePath)" \
             -var-file="secrets.auto.tfvars"
         displayName: 'Terraform Plan'
+        env:
+          TF_ROOT: ${{ parameters.tfRoot }}
 
       # Terraform Apply
       - script: |
           echo "⚙️ Running terraform apply..."
-          terraform -chdir=${{ parameters.tfRoot }} apply \
+          terraform -chdir=$(parameters.tfRoot) apply \
             -auto-approve -input=false \
             -var "ssh_private_key_path=$(downloadPrivateKey.secureFilePath)" \
             -var-file="secrets.auto.tfvars"
