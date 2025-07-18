@@ -18,10 +18,6 @@ jobs:
     # variables:
     #   - group: ${{ parameters.varGroup }}  # From Azure DevOps --> Pipelines --> Library --> Variable Group = 'Private_Variables'
 
-    # Expose the private key path as output.
-    outputs:
-      privateKeyPath: $(downloadPrivateKey.secureFilePath)
-
     # Define the steps that will run in this job
     steps:
       # Download the secrets.auto.tfvars file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
