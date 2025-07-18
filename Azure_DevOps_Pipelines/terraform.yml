@@ -40,17 +40,17 @@ jobs:
       # Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)
       - script: |
           echo "🔐 Showing private key snippet:"
-          head -n 10 "${{ parameters.ssh_private_key_path }}"
+          head -n 10 "$(downloadPrivateKey.secureFilePath)"
 
           echo "🔒 Setting permissions..."
-          chmod 600 "${{ parameters.ssh_private_key_path }}"
+          chmod 600 "$(downloadPrivateKey.secureFilePath)"
 
           echo "🔑 Starting ssh-agent and adding key..."
           eval "$(ssh-agent -s)"
-          ssh-add "${{ parameters.ssh_private_key_path }}"
+          ssh-add "$(downloadPrivateKey.secureFilePath)"
 
           echo "🧪 Testing SSH connection to Proxmox..."
-          ssh -o StrictHostKeyChecking=no -i "${{ parameters.ssh_private_key_path }}" root@192.168.1.250 "echo ✅ SSH connection successful"
+          ssh -o StrictHostKeyChecking=no -i "$(downloadPrivateKey.secureFilePath)" root@192.168.1.250 "echo ✅ SSH connection successful"
         displayName: 'Setup SSH key and test connection to Proxmox server (Corsair700d) from the Azure DevOps agent VM (automation-9999)'
 
       # Terraform Init
@@ -63,7 +63,7 @@ jobs:
       - script: |
           echo "🔍 Running terraform plan..."
           terraform -chdir=${{ parameters.tfRoot }} plan \
-            -var "ssh_private_key_path=${{ parameters.ssh_private_key_path }}" \
+            -var "ssh_private_key_path=${{ downloadPrivateKey.secureFilePath }}" \
             -var-file="secrets.auto.tfvars"
         displayName: 'Terraform Plan'
 

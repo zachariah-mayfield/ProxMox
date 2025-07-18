@@ -25,31 +25,29 @@ jobs:
       - task: DownloadSecureFile@1
         name: downloadPublicKey
         inputs:
-          secureFile: ${{ parameters.ssh_public_key_path }}  # e.g. id_ed25519.pub - this is the Public SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files 
+          secureFile: ${{ parameters.ssh_public_key_path }}  # e.g. id_ed25519.pub - this is the Public SSH Key file (as secure file) from Azure DevOps --> Pipelines --> Library --> Secure Files
 
       # ── Prepare keys & start ssh-agent ────────────────────────────────────────
       - script: |
           set -e
 
           echo "🔐 Showing private key snippet:"
-          head -n 10 '$(downloadPrivateKey.secureFilePath)' || true
+          head -n 5 "$(downloadPrivateKey.secureFilePath)" || true
 
           echo "🔒 Copying keys and setting permissions..."
-          mkdir -p ~/.ssh
-          cp '$(downloadPrivateKey.secureFilePath)' ~/.ssh/${{ parameters.ssh_private_key_path }}
-          cp '$(downloadPublicKey.secureFilePath)' ~/.ssh/${{ parameters.ssh_public_key_path }}
-
-          chmod 600 ~/.ssh/${{ parameters.ssh_private_key_path }}
-          chmod 644 ~/.ssh/${{ parameters.ssh_public_key_path }}
-
+          cp "$(downloadPrivateKey.secureFilePath)" ~/.ssh/"${{ parameters.ssh_private_key_path }}"
+          cp "$(downloadPublicKey.secureFilePath)" ~/.ssh/"${{ parameters.ssh_public_key_path }}"
+          
+          chmod 600 ~/.ssh/"${{ parameters.ssh_private_key_path }}"
+          chmod 644 ~/.ssh/"${{ parameters.ssh_public_key_path }}"
+          
           echo "🔑 Starting ssh-agent and adding key..."
           eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/${{ parameters.ssh_private_key_path }}
+          ssh-add ~/.ssh/"${{ parameters.ssh_private_key_path }}"
 
           echo "🧪 Testing SSH connection to Proxmox..."
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/${{ parameters.ssh_private_key_path }} root@192.168.1.250 'echo ✅ SSH OK'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/"${{ parameters.ssh_private_key_path }}" root@192.168.1.250 'echo ✅ SSH OK'
         displayName: "Setup SSH Keys and start ssh-agent"
-
 
       # ── Download Terraform outputs (vm_ips) ───────────────────────────────────
       - task: DownloadPipelineArtifact@2
