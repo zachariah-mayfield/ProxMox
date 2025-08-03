@@ -17,8 +17,7 @@ Old_Files/*
 
 # Ignore Ansible Sensitive files:
 Ansible/roles/*/vars/main.yml
-Ansible/inventory.ini
-Ansible/inventory.yml
+Ansible/inventory*
 
 # Ignore Terraform Sensitive files:
 Terraform/*/terraform.tfvars
